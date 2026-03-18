@@ -85,7 +85,7 @@
   <h2>Command Center Mobile</h2>
   <p>Enter a sync key to connect to your desktop dashboard. You'll enter the same key there to pull in your mobile tasks.</p>
   <input type="text" id="setup-key" placeholder="e.g. aviva-nathalie" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-  <button onclick="saveSyncKey()">Connect & start</button>
+  <p style="font-size:12px;color:rgba(249,247,244,0.5);text-align:left;margin-bottom:6px;line-height:1.6">GitHub token — create at <a href="https://github.com/settings/tokens/new" target="_blank" style="color:#c4763a">github.com/settings/tokens</a> with <b>repo</b> scope:</p><input type="password" id="setup-gh-token" placeholder="ghp_..." autocomplete="off" style="width:100%;font-size:16px;font-family:inherit;padding:14px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.15);color:#F9F7F4;margin-bottom:12px;border-radius:0"/><button onclick="saveSyncKey()">Connect & start</button>
   <p class="setup-note">
     <b>How to add to home screen:</b><br>
     Tap the Share button in Safari → "Add to Home Screen" → it'll appear as an app icon.
@@ -104,7 +104,7 @@
     </div>
     <div class="header-right">
       <span class="sync-indicator" id="sync-indicator">Never synced</span>
-      <button class="sync-btn" id="sync-btn" onclick="syncNow()">↺ Sync</button>
+      <button onclick="showSettings()" style="font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 12px;background:transparent;border:0.5px solid rgba(249,247,244,0.2);color:rgba(249,247,244,0.5);cursor:pointer;letter-spacing:0.06em">Settings</button><button class="sync-btn" id="sync-btn" onclick="syncNow()">↺ Sync</button>
     </div>
   </div>
 
@@ -154,6 +154,8 @@ function saveSyncKey(){
   if(!raw){ showToast('Please enter a sync key'); return; }
   const key = raw.toLowerCase().replace(/\s+/g,'-');
   localStorage.setItem(SYNC_KEY_STORE, key);
+  const ghToken = document.getElementById('setup-gh-token');
+  if(ghToken && ghToken.value.trim()) localStorage.setItem('aviva_gh_token', ghToken.value.trim());
   document.getElementById('setup').classList.add('hidden');
   document.getElementById('main-app').style.display = 'flex';
   // Show install banner if not in standalone mode
@@ -176,41 +178,67 @@ function loadLocal(){
 
 async function syncNow(){
   const syncKey = getSyncKey();
-  if(!syncKey) return;
+  if(!syncKey){ showToast('Enter a sync key first'); return; }
+  const ghToken = localStorage.getItem('aviva_gh_token')||'';
+  if(!ghToken){ showToast('Enter GitHub token'); showSettings(); return; }
   const btn=document.getElementById('sync-btn');
   btn.classList.add('spinning'); btn.disabled=true;
   document.getElementById('sync-indicator').textContent='Syncing...';
   try{
-    let blobId = getBlobId();
-    const payload = { syncKey, tasks, doneIds:[...doneIds], updatedAt: new Date().toISOString() };
-    if(blobId){
-      // Update existing blob
-      await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`, {
-        method:'PUT',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body: JSON.stringify(payload)
+    const repo = 'nfutrellaviva/aviva-command-center';
+    const filename = 'mobile-tasks-'+syncKey+'.json';
+    const payload = JSON.stringify({ tasks, doneIds:[...doneIds], updatedAt: new Date().toISOString() }, null, 2);
+    const encoded = btoa(unescape(encodeURIComponent(payload)));
+    let sha = '';
+    try{
+      const getRes = await fetch('https://api.github.com/repos/'+repo+'/contents/'+filename,{
+        headers:{'Authorization':'token '+ghToken,'Accept':'application/vnd.github.v3+json'}
       });
-    } else {
-      // Create new blob and store the ID
-      const res = await fetch('https://jsonblob.com/api/jsonBlob', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body: JSON.stringify(payload)
-      });
-      // Extract blob ID from Location header or response
-      const location = res.headers.get('Location')||'';
-      const newId = location.split('/').pop();
-      if(newId){ localStorage.setItem(BLOB_ID_STORE, newId); }
-    }
+      if(getRes.ok){ const d=await getRes.json(); sha=d.sha||''; }
+    }catch(e){}
+    const body = { message:'sync mobile tasks', content: encoded };
+    if(sha) body.sha = sha;
+    const putRes = await fetch('https://api.github.com/repos/'+repo+'/contents/'+filename,{
+      method:'PUT',
+      headers:{'Authorization':'token '+ghToken,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    if(!putRes.ok) throw new Error('GitHub push failed: '+putRes.status);
     const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     document.getElementById('sync-indicator').textContent = 'Synced '+now;
     showToast('Synced to dashboard');
   }catch(e){
     document.getElementById('sync-indicator').textContent = 'Sync failed';
-    showToast('Could not sync — check connection');
+    showToast('Sync failed: '+e.message);
   }
   btn.classList.remove('spinning'); btn.disabled=false;
   saveLocal();
+}
+
+function showSettings(){
+  const existing = document.getElementById('settings-modal');
+  if(existing){ existing.remove(); return; }
+  const token = localStorage.getItem('aviva_gh_token')||'';
+  const div = document.createElement('div');
+  div.id='settings-modal';
+  div.style.cssText='position:fixed;inset:0;background:rgba(17,17,16,0.95);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px';
+  div.innerHTML='<div style="background:#191816;border:0.5px solid rgba(249,247,244,0.12);padding:28px;width:100%;max-width:340px">'
+    +'<div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(249,247,244,0.4);margin-bottom:16px">Sync settings</div>'
+    +'<p style="font-size:12px;color:rgba(249,247,244,0.5);line-height:1.7;margin-bottom:16px">Create a GitHub token at <a href=\"https://github.com/settings/tokens/new\" target=\"_blank\" style=\"color:#c4763a\">github.com/settings/tokens</a> with repo scope.</p>'
+    +'<input type=\"password\" id=\"gh-token-input\" placeholder=\"ghp_...\" value=\"'+token+'\" style=\"width:100%;font-size:14px;font-family:inherit;padding:10px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.15);color:#F9F7F4;margin-bottom:12px;border-radius:0\">'
+    +'<div style=\"display:flex;gap:8px\">'
+    +'<button onclick=\"saveGhToken()\" style=\"flex:1;font-size:13px;font-family:inherit;padding:10px;background:#7B4518;border:none;color:#F9F7F4;cursor:pointer\">Save & sync</button>'
+    +'<button onclick=\"document.getElementById('settings-modal').remove()\" style=\"font-size:13px;font-family:inherit;padding:10px;background:transparent;border:0.5px solid rgba(249,247,244,0.2);color:rgba(249,247,244,0.6);cursor:pointer\">Cancel</button>'
+    +'</div></div>';
+  document.body.appendChild(div);
+}
+
+function saveGhToken(){
+  const t = document.getElementById('gh-token-input').value.trim();
+  if(!t) return;
+  localStorage.setItem('aviva_gh_token', t);
+  document.getElementById('settings-modal').remove();
+  syncNow();
 }
 
 function addTask(){
