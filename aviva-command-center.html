@@ -175,6 +175,11 @@
     </div>
     <div class="nav-right">
       <span class="sync-time" id="sync-time">Never synced</span>
+      <button onclick="exportTasks()" style="font-size:11px;font-family:inherit;padding:8px 14px;background:transparent;border:0.5px solid rgba(249,247,244,0.2);color:rgba(249,247,244,0.6);cursor:pointer;letter-spacing:0.06em" title="Export tasks as backup JSON">Export backup</button>
+      <label style="font-size:11px;font-family:inherit;padding:8px 14px;background:transparent;border:0.5px solid rgba(249,247,244,0.2);color:rgba(249,247,244,0.6);cursor:pointer;letter-spacing:0.06em" title="Restore from backup JSON">
+        Import backup
+        <input type="file" accept=".json" onchange="importTasksFromFile(event)" style="display:none"/>
+      </label>
       <button class="btn-primary" id="refresh-btn" onclick="refreshAll()">
         <span class="spin">↺</span>&nbsp; Refresh all
       </button>
@@ -203,6 +208,7 @@
         <div class="source-pills">
           <div class="src-pill" id="pill-granola"><span class="dot dot-warn"></span>Granola — not connected</div>
           <div class="src-pill" id="pill-outlook"><span class="dot dot-warn"></span>Outlook — paste below</div>
+          <div class="src-pill" id="pill-mobile"><span class="dot dot-warn"></span>Mobile — not connected</div>
           <div class="src-pill"><span class="dot dot-ok"></span>Manual todos — ready</div>
         </div>
       </div>
@@ -489,11 +495,61 @@ Max 20 tasks. Only include genuine action items that require follow-up, not just
   }
 }
 
+function saveMobileSyncKey(){
+  const inp = document.getElementById('mobile-sync-key');
+  const key = (inp.value||'').trim().toLowerCase().replace(/\s+/g,'-');
+  if(!key) return;
+  localStorage.setItem('aviva_mobile_sync_key', key);
+  inp.value = '';
+  const msg = document.getElementById('mobile-sync-msg');
+  msg.style.display='block'; msg.textContent='Sync key saved. Pulling mobile tasks...';
+  setTimeout(()=>msg.style.display='none', 3000);
+  fetchMobile();
+}
+
+async function fetchMobile(){
+  const key = localStorage.getItem('aviva_mobile_sync_key')||'';
+  if(!key){
+    document.getElementById('pill-mobile').innerHTML='<span class="dot dot-warn"></span>Mobile — no sync key';
+    return false;
+  }
+  const blobId = localStorage.getItem('aviva_mobile_blob_id')||'';
+  document.getElementById('pill-mobile').innerHTML='<span class="dot dot-pulse"></span>Mobile — syncing...';
+  try{
+    // Search for blob by sync key - try stored blob ID first
+    let data = null;
+    if(blobId){
+      const res = await fetch('https://jsonblob.com/api/jsonBlob/'+blobId, {headers:{Accept:'application/json'}});
+      if(res.ok){
+        data = await res.json();
+        if(data.syncKey !== key) data = null; // wrong key
+      }
+    }
+    if(!data) throw new Error('Blob not found');
+    const mobileTasks = (data.tasks||[]).filter(t=>t.source==='mobile');
+    const mobileDone = new Set(data.doneIds||[]);
+    // Merge: remove old mobile tasks, add fresh ones
+    tasks = tasks.filter(t=>t.source!=='mobile');
+    tasks = [...mobileTasks, ...tasks];
+    // Merge done IDs
+    mobileDone.forEach(id=>doneIds.add(id));
+    document.getElementById('pill-mobile').innerHTML='<span class="dot dot-ok"></span>Mobile — '+mobileTasks.length+' tasks';
+    return true;
+  }catch(e){
+    document.getElementById('pill-mobile').innerHTML='<span class="dot dot-warn"></span>Mobile — enter blob ID below';
+    // Show helper
+    const msg = document.getElementById('mobile-sync-msg');
+    msg.style.display='block';
+    msg.textContent='Paste the blob ID from your iPhone app to connect.';
+    return false;
+  }
+}
+
 async function refreshAll(){
   const btn=document.getElementById('refresh-btn');
   btn.classList.add('spinning');btn.disabled=true;
   document.getElementById('sync-time').textContent='Syncing...';
-  await fetchGranola();
+  await Promise.all([fetchGranola(), fetchMobile()]);
   save();render();
   const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   document.getElementById('sync-time').textContent='Last synced '+now;
@@ -506,8 +562,45 @@ function askClaude(prompt){
   window.open('https://claude.ai/new?q='+encodeURIComponent(full),'_blank');
 }
 
+function exportTasks(){
+  const data = JSON.stringify({tasks, doneIds:[...doneIds]}, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'aviva-tasks-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function importTasksFromFile(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      const d = JSON.parse(ev.target.result);
+      tasks = d.tasks||[]; doneIds = new Set(d.doneIds||[]);
+      save(); render();
+      alert('Imported '+tasks.length+' tasks successfully!');
+    }catch(err){ alert('Could not read backup file.'); }
+  };
+  reader.readAsText(file);
+}
+
 // Init
 loadSaved();
+
+// Seed tasks if localStorage is empty (first load on new device/URL)
+if(tasks.length === 0){
+  const seed = {"tasks": [{"id": "t001", "title": "Update all Feb KPI & P&L in scorecard", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-24"}, {"id": "t002", "title": "Update all Jan KPIs & P&L data in the scorecard", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-23"}, {"id": "t003", "title": "Push a reminder to all for the Partner call", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-23"}, {"id": "t004", "title": "Schedule reminders for KPI pulls", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-26"}, {"id": "t005", "title": "follow up with Jessica/Benev on call details", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-20"}, {"id": "t006", "title": "compare patient fi and cherry - make the decision", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-24"}, {"id": "t007", "title": "complete goals in dashboard and send to Team", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-25"}, {"id": "t008", "title": "Need to have big rocks for Q2 for EOS meeting", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-26"}, {"id": "t009", "title": "Build out dashboard in Corral", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-03-26"}, {"id": "t010", "title": "Follow up Feb P&Ls", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-03-23"}, {"id": "t011", "title": "Confirm schedule for visiting Sarah 6/2 - 6/20", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-03-20"}, {"id": "t012", "title": "send luminate trip reminder email", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-25"}, {"id": "t013", "title": "schedule Luminate dinner for Thursday", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-20"}, {"id": "t014", "title": "change allergan/galderma pricing based on new agreement", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t015", "title": "Send quicksilver order to Amanda", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-24"}, {"id": "t016", "title": "Add quicksilver to the Hub", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t017", "title": "Add AnteAge to the Hub", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t018", "title": "Add PRX to the Hub", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t019", "title": "Send Suzanne the facial analysis tools for the website", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": ""}, {"id": "t020", "title": "respond to Mike/Paylocity email", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": ""}, {"id": "t021", "title": "Review Paylocity Admin & Employee SOPs from Jamie", "detail": "Jamie sent two sets of Paylocity SOPs (17 Admin/Corporate + 8 Employee level) for review", "from": "Jamie Ritter", "priority": "normal", "source": "outlook", "due": ""}, {"id": "t022", "title": "Await responses on website photo analysis vendor inquiry", "detail": "Nathalie emailed partner locations asking for the name, monthly cost, and contract details of their photo analysis vendor", "from": "Nathalie", "priority": "normal", "source": "outlook", "due": ""}, {"id": "t023", "title": "Acknowledge Agenda Template Canva link from Audrey", "detail": "Audrey sent the Aviva agenda template via Canva link after Nathalie requested it", "from": "Audrey", "priority": "normal", "source": "outlook", "due": ""}, {"id": "t024", "title": "Respond to EntityMed intro \u2014 schedule exploratory call", "detail": "Loreliz introduced Heather from EntityMed (AI simulation solutions) for an exploratory conversation", "from": "Loreliz", "priority": "normal", "source": "outlook", "due": ""}], "doneIds": []};
+  tasks = seed.tasks; doneIds = new Set(seed.doneIds);
+  save();
+}
+
+// Pre-fill mobile sync key if already set
+const storedMobileKey = localStorage.getItem('aviva_mobile_sync_key');
+if(storedMobileKey){
+  const mki = document.getElementById('mobile-sync-key');
+  if(mki) mki.placeholder = 'Key saved: '+storedMobileKey.slice(0,16)+'...';
+}
 const storedKey=getApiKey();
 if(storedKey){
   document.getElementById('setup-overlay').classList.remove('visible');
