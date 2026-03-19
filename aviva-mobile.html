@@ -14,15 +14,10 @@
   html,body{height:100%;background:#111110;font-family:'Plus Jakarta Sans',sans-serif;color:#F9F7F4;overflow:hidden}
   .app{display:flex;flex-direction:column;height:100vh;height:100dvh}
   .header{background:#191816;border-bottom:0.5px solid rgba(249,247,244,0.08);padding:16px 20px;padding-top:max(16px,env(safe-area-inset-top));display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-  .header-left{display:flex;flex-direction:column;gap:1px}
   .wm-a{font-size:12px;font-weight:500;letter-spacing:0.2em;color:#F9F7F4}
   .wm-b{font-size:7px;letter-spacing:0.35em;color:rgba(249,247,244,0.4)}
   .header-right{display:flex;align-items:center;gap:8px}
-  .sync-indicator{font-size:11px;color:rgba(249,247,244,0.35);letter-spacing:0.03em}
-  .sync-btn{font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 14px;background:#7B4518;border:none;color:#F9F7F4;cursor:pointer;letter-spacing:0.06em}
-  .sync-btn:active{background:#8f5220}
-  .sync-btn.spinning{animation:blink 0.8s infinite}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
+  .saved-indicator{font-size:11px;color:rgba(249,247,244,0.35);letter-spacing:0.03em}
   .add-form{background:#191816;border-bottom:0.5px solid rgba(249,247,244,0.08);padding:14px 20px;flex-shrink:0}
   .add-input{width:100%;font-size:16px;font-family:'Plus Jakarta Sans',sans-serif;padding:12px 14px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.12);color:#F9F7F4;margin-bottom:10px;-webkit-appearance:none;border-radius:0}
   .add-input::placeholder{color:rgba(249,247,244,0.3)}
@@ -31,7 +26,7 @@
   .add-select,.add-date{flex:1;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;padding:10px 8px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.12);color:#F9F7F4;-webkit-appearance:none;border-radius:0;color-scheme:dark}
   .add-select option{background:#191816}
   .add-btn{font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;padding:10px 18px;background:#7B4518;border:none;color:#F9F7F4;cursor:pointer;letter-spacing:0.06em;white-space:nowrap}
-  .add-btn:active{background:#8f5220;transform:scale(0.97)}
+  .add-btn:active{background:#8f5220}
   .tabs{display:flex;background:#191816;border-bottom:0.5px solid rgba(249,247,244,0.08);flex-shrink:0}
   .tab{flex:1;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:10px 4px;background:transparent;border:none;border-bottom:1.5px solid transparent;color:rgba(249,247,244,0.4);cursor:pointer;letter-spacing:0.06em;text-transform:uppercase}
   .tab.active{color:#F9F7F4;border-bottom-color:#7B4518}
@@ -46,65 +41,26 @@
   .task-title{font-size:14px;font-weight:500;color:#F9F7F4;margin-bottom:2px;line-height:1.4}
   .task-meta{font-size:11px;color:rgba(249,247,244,0.35)}
   .task-due{font-size:10px;margin-top:3px;letter-spacing:0.04em}
-  .src-tag{font-size:10px;padding:2px 7px;border:0.5px solid rgba(249,247,244,0.1);color:rgba(249,247,244,0.3);letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0;margin-top:2px}
-  .src-tag.mobile{border-color:rgba(123,69,24,0.35);color:#c4763a}
   .del-btn{font-size:20px;color:rgba(249,247,244,0.15);background:none;border:none;padding:0 2px;cursor:pointer;flex-shrink:0}
   .del-btn:active{color:#c4763a}
   .empty{text-align:center;padding:4rem 2rem;color:rgba(249,247,244,0.2);font-size:13px;letter-spacing:0.06em}
   .toast{position:fixed;bottom:max(24px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:#7B4518;color:#F9F7F4;font-size:12px;padding:10px 20px;letter-spacing:0.06em;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:99}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-  /* Setup */
-  .setup{position:fixed;inset:0;background:#111110;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px}
-  .setup.hidden{display:none}
-  .setup-logo{display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:36px}
-  .s-wm-a{font-size:18px;font-weight:500;letter-spacing:0.22em;color:#F9F7F4}
-  .s-wm-b{font-size:9px;letter-spacing:0.35em;color:rgba(249,247,244,0.4)}
-  .setup h2{font-size:16px;font-weight:400;color:#F9F7F4;margin-bottom:10px;text-align:center;letter-spacing:0.04em}
-  .setup p{font-size:13px;color:rgba(249,247,244,0.5);text-align:center;line-height:1.7;margin-bottom:28px}
-  .setup input{width:100%;font-size:16px;font-family:'Plus Jakarta Sans',sans-serif;padding:14px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.15);color:#F9F7F4;margin-bottom:12px;-webkit-appearance:none;border-radius:0}
-  .setup input::placeholder{color:rgba(249,247,244,0.25)}
-  .setup input:focus{outline:none;border-color:rgba(123,69,24,0.7)}
-  .setup button{width:100%;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;padding:14px;background:#7B4518;border:none;color:#F9F7F4;cursor:pointer;letter-spacing:0.08em}
-  .setup button:active{background:#8f5220}
-  .setup-note{font-size:11px;color:rgba(249,247,244,0.25);text-align:center;margin-top:16px;line-height:1.7}
-  .setup-note b{color:rgba(249,247,244,0.5)}
-
-  /* Install banner */
-  .install-banner{background:rgba(123,69,24,0.15);border:0.5px solid rgba(123,69,24,0.3);padding:10px 20px;font-size:11px;color:rgba(249,247,244,0.6);text-align:center;flex-shrink:0;line-height:1.6;display:none}
-  .install-banner.show{display:block}
+  .export-bar{background:rgba(123,69,24,0.12);border-top:0.5px solid rgba(123,69,24,0.25);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+  .export-bar span{font-size:11px;color:rgba(249,247,244,0.4);letter-spacing:0.04em}
+  .export-btn{font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:6px 14px;background:#7B4518;border:none;color:#F9F7F4;cursor:pointer;letter-spacing:0.06em}
+  .export-btn:active{background:#8f5220}
 </style>
 </head>
 <body>
-
-<div class="setup" id="setup">
-  <div class="setup-logo">
-    <div class="s-wm-a">AVIVA</div>
-    <div class="s-wm-b">AESTHETICS</div>
-  </div>
-  <h2>Command Center Mobile</h2>
-  <p>Enter a sync key to connect to your desktop dashboard. You'll enter the same key there to pull in your mobile tasks.</p>
-  <input type="text" id="setup-key" placeholder="e.g. aviva-nathalie" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-  <p style="font-size:12px;color:rgba(249,247,244,0.5);text-align:left;margin-bottom:6px;line-height:1.6">GitHub token — create at <a href="https://github.com/settings/tokens/new" target="_blank" style="color:#c4763a">github.com/settings/tokens</a> with <b>repo</b> scope:</p><input type="password" id="setup-gh-token" placeholder="ghp_..." autocomplete="off" style="width:100%;font-size:16px;font-family:inherit;padding:14px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.15);color:#F9F7F4;margin-bottom:12px;border-radius:0"/><button onclick="saveSyncKey()">Connect & start</button>
-  <p class="setup-note">
-    <b>How to add to home screen:</b><br>
-    Tap the Share button in Safari → "Add to Home Screen" → it'll appear as an app icon.
-  </p>
-</div>
-
-<div class="app" id="main-app" style="display:none">
-  <div class="install-banner" id="install-banner">
-    Tip: Tap Share → "Add to Home Screen" in Safari for the best experience
-  </div>
-
+<div class="app">
   <div class="header">
-    <div class="header-left">
+    <div>
       <div class="wm-a">AVIVA</div>
       <div class="wm-b">AESTHETICS</div>
     </div>
     <div class="header-right">
-      <span class="sync-indicator" id="sync-indicator">Never synced</span>
-      <button onclick="showSettings()" style="font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 12px;background:transparent;border:0.5px solid rgba(249,247,244,0.2);color:rgba(249,247,244,0.5);cursor:pointer;letter-spacing:0.06em">Settings</button><button class="sync-btn" id="sync-btn" onclick="syncNow()">↺ Sync</button>
+      <span class="saved-indicator" id="saved-indicator">Ready</span>
     </div>
   </div>
 
@@ -124,121 +80,42 @@
   <div class="tabs">
     <button class="tab active" onclick="setFilter('all',this)">All</button>
     <button class="tab" onclick="setFilter('urgent',this)">Urgent</button>
-    <button class="tab" onclick="setFilter('mobile',this)">Mine</button>
     <button class="tab" onclick="setFilter('done',this)">Done</button>
   </div>
 
   <div class="task-list" id="task-list"></div>
+
+  <div class="export-bar">
+    <span>Copy tasks to import into dashboard</span>
+    <button class="export-btn" onclick="copyForDashboard()">Copy JSON</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const SYNC_KEY_STORE = 'aviva_sync_key';
-const BLOB_ID_STORE = 'aviva_blob_id';
-const LOCAL_STORE = 'aviva_mobile_v1';
+const STORE = 'aviva_mobile_v2';
 let tasks = [], doneIds = new Set(), activeFilter = 'all', ctr = Date.now();
 
 function uid(){ return 'm'+(ctr++) }
-function getSyncKey(){ return localStorage.getItem(SYNC_KEY_STORE)||'' }
-function getBlobId(){ return localStorage.getItem(BLOB_ID_STORE)||'' }
 
-function showToast(msg, dur=2200){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), dur);
+function save(){
+  try{ localStorage.setItem(STORE, JSON.stringify({tasks, doneIds:[...doneIds]})) }catch(e){}
+  const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('saved-indicator').textContent = 'Saved '+now;
 }
 
-function saveSyncKey(){
-  const raw = document.getElementById('setup-key').value.trim();
-  if(!raw){ showToast('Please enter a sync key'); return; }
-  const key = raw.toLowerCase().replace(/\s+/g,'-');
-  localStorage.setItem(SYNC_KEY_STORE, key);
-  const ghToken = document.getElementById('setup-gh-token');
-  if(ghToken && ghToken.value.trim()) localStorage.setItem('aviva_gh_token', ghToken.value.trim());
-  document.getElementById('setup').classList.add('hidden');
-  document.getElementById('main-app').style.display = 'flex';
-  // Show install banner if not in standalone mode
-  if(!window.navigator.standalone){
-    document.getElementById('install-banner').classList.add('show');
-    setTimeout(()=>document.getElementById('install-banner').classList.remove('show'), 8000);
-  }
-  syncNow();
-}
-
-function saveLocal(){
-  try{ localStorage.setItem(LOCAL_STORE, JSON.stringify({tasks,doneIds:[...doneIds],blobId:getBlobId()})) }catch(e){}
-}
-function loadLocal(){
+function load(){
   try{
-    const d=JSON.parse(localStorage.getItem(LOCAL_STORE)||'null');
-    if(d){ tasks=d.tasks||[]; doneIds=new Set(d.doneIds||[]); if(d.blobId) localStorage.setItem(BLOB_ID_STORE,d.blobId); }
+    const d = JSON.parse(localStorage.getItem(STORE)||'null');
+    if(d){ tasks=d.tasks||[]; doneIds=new Set(d.doneIds||[]); }
   }catch(e){}
 }
 
-async function syncNow(){
-  const syncKey = getSyncKey();
-  if(!syncKey){ showToast('Enter a sync key first'); return; }
-  const ghToken = localStorage.getItem('aviva_gh_token')||'';
-  if(!ghToken){ showToast('Enter GitHub token'); showSettings(); return; }
-  const btn=document.getElementById('sync-btn');
-  btn.classList.add('spinning'); btn.disabled=true;
-  document.getElementById('sync-indicator').textContent='Syncing...';
-  try{
-    const repo = 'nfutrellaviva/aviva-command-center';
-    const filename = 'mobile-tasks-'+syncKey+'.json';
-    const payload = JSON.stringify({ tasks, doneIds:[...doneIds], updatedAt: new Date().toISOString() }, null, 2);
-    const encoded = btoa(unescape(encodeURIComponent(payload)));
-    let sha = '';
-    try{
-      const getRes = await fetch('https://api.github.com/repos/'+repo+'/contents/'+filename,{
-        headers:{'Authorization':'token '+ghToken,'Accept':'application/vnd.github.v3+json'}
-      });
-      if(getRes.ok){ const d=await getRes.json(); sha=d.sha||''; }
-    }catch(e){}
-    const body = { message:'sync mobile tasks', content: encoded };
-    if(sha) body.sha = sha;
-    const putRes = await fetch('https://api.github.com/repos/'+repo+'/contents/'+filename,{
-      method:'PUT',
-      headers:{'Authorization':'token '+ghToken,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    });
-    if(!putRes.ok) throw new Error('GitHub push failed: '+putRes.status);
-    const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    document.getElementById('sync-indicator').textContent = 'Synced '+now;
-    showToast('Synced to dashboard');
-  }catch(e){
-    document.getElementById('sync-indicator').textContent = 'Sync failed';
-    showToast('Sync failed: '+e.message);
-  }
-  btn.classList.remove('spinning'); btn.disabled=false;
-  saveLocal();
-}
-
-function showSettings(){
-  const existing = document.getElementById('settings-modal');
-  if(existing){ existing.remove(); return; }
-  const token = localStorage.getItem('aviva_gh_token')||'';
-  const div = document.createElement('div');
-  div.id='settings-modal';
-  div.style.cssText='position:fixed;inset:0;background:rgba(17,17,16,0.95);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px';
-  div.innerHTML='<div style="background:#191816;border:0.5px solid rgba(249,247,244,0.12);padding:28px;width:100%;max-width:340px">'
-    +'<div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(249,247,244,0.4);margin-bottom:16px">Sync settings</div>'
-    +'<p style="font-size:12px;color:rgba(249,247,244,0.5);line-height:1.7;margin-bottom:16px">Create a GitHub token at <a href=\"https://github.com/settings/tokens/new\" target=\"_blank\" style=\"color:#c4763a\">github.com/settings/tokens</a> with repo scope.</p>'
-    +'<input type=\"password\" id=\"gh-token-input\" placeholder=\"ghp_...\" value=\"'+token+'\" style=\"width:100%;font-size:14px;font-family:inherit;padding:10px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.15);color:#F9F7F4;margin-bottom:12px;border-radius:0\">'
-    +'<div style=\"display:flex;gap:8px\">'
-    +'<button onclick=\"saveGhToken()\" style=\"flex:1;font-size:13px;font-family:inherit;padding:10px;background:#7B4518;border:none;color:#F9F7F4;cursor:pointer\">Save & sync</button>'
-    +'<button onclick=\"document.getElementById('settings-modal').remove()\" style=\"font-size:13px;font-family:inherit;padding:10px;background:transparent;border:0.5px solid rgba(249,247,244,0.2);color:rgba(249,247,244,0.6);cursor:pointer\">Cancel</button>'
-    +'</div></div>';
-  document.body.appendChild(div);
-}
-
-function saveGhToken(){
-  const t = document.getElementById('gh-token-input').value.trim();
-  if(!t) return;
-  localStorage.setItem('aviva_gh_token', t);
-  document.getElementById('settings-modal').remove();
-  syncNow();
+function showToast(msg, dur=2000){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
 }
 
 function addTask(){
@@ -249,25 +126,39 @@ function addTask(){
   if(!title) return;
   tasks.unshift({id:uid(),title,detail:'Added on iPhone',from:'Mobile',priority:pri.value,source:'mobile',due:due.value||''});
   inp.value=''; due.value='';
-  saveLocal(); render();
+  save(); render();
   showToast('Task added');
-  setTimeout(syncNow, 400);
 }
 
 function toggleDone(id){
   doneIds.has(id)?doneIds.delete(id):doneIds.add(id);
-  saveLocal(); render();
-  setTimeout(syncNow, 400);
+  save(); render();
 }
 function deleteTask(id){
   tasks=tasks.filter(t=>t.id!==id); doneIds.delete(id);
-  saveLocal(); render();
-  setTimeout(syncNow, 400);
+  save(); render();
 }
 function setFilter(f,btn){
   activeFilter=f;
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active'); render();
+}
+
+function copyForDashboard(){
+  const mobileTasks = tasks.filter(t=>t.source==='mobile');
+  const json = JSON.stringify(mobileTasks.map(t=>({
+    title: t.title,
+    from: t.from,
+    detail: t.detail,
+    priority: t.priority,
+    key: t.id
+  })));
+  navigator.clipboard.writeText(json).then(()=>{
+    showToast('Copied! Paste into dashboard Outlook import box', 3000);
+  }).catch(()=>{
+    // fallback: show in prompt
+    prompt('Copy this JSON and paste into the dashboard:', json);
+  });
 }
 
 function formatDue(d){
@@ -287,42 +178,29 @@ function render(){
     if(activeFilter==='all') return !doneIds.has(t.id);
     if(activeFilter==='done') return doneIds.has(t.id);
     if(activeFilter==='urgent') return !doneIds.has(t.id)&&t.priority==='urgent';
-    if(activeFilter==='mobile') return !doneIds.has(t.id)&&t.source==='mobile';
     return !doneIds.has(t.id);
   });
   vis.sort((a,b)=>pOrder[a.priority]-pOrder[b.priority]);
   if(!vis.length){ document.getElementById('task-list').innerHTML='<div class="empty">Nothing here.</div>'; return; }
-  const pc=p=>p==='urgent'?'#c4763a':p==='high'?'rgba(249,247,244,0.3)':'rgba(249,247,244,0.1)';
+  const pc=p=>p==='urgent'?'#c4763a':p==='high'?'rgba(249,247,244,0.3)':' rgba(249,247,244,0.1)';
   document.getElementById('task-list').innerHTML = vis.map(t=>{
     const done=doneIds.has(t.id);
-    const dueColor=new Date(t.due+'T00:00:00')<=new Date()?'#c4763a':'rgba(249,247,244,0.3)';
-    return `<div class="task${done?' done':''}">
-      <div class="pri-bar" style="background:${pc(t.priority)}"></div>
-      <div class="check${done?' checked':''}" onclick="toggleDone('${t.id}')">
-        ${done?'<svg width="12" height="10" viewBox="0 0 12 10"><polyline points="1,5 4.5,8.5 11,1.5" stroke="#F9F7F4" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
-      </div>
-      <div class="task-body">
-        <div class="task-title">${esc(t.title)}</div>
-        <div class="task-meta">${esc(t.from)}</div>
-        ${t.due?`<div class="task-due" style="color:${dueColor}">Due ${formatDue(t.due)}</div>`:''}
-      </div>
-      <span class="src-tag${t.source==='mobile'?' mobile':''}">${esc(t.source)}</span>
-      <button class="del-btn" onclick="deleteTask('${t.id}')">×</button>
-    </div>`;
+    const dueColor=t.due&&new Date(t.due+'T00:00:00')<=new Date()?'#c4763a':'rgba(249,247,244,0.3)';
+    return '<div class="task'+(done?' done':'')+'">'
+      +'<div class="pri-bar" style="background:'+pc(t.priority)+'"></div>'
+      +'<div class="check'+(done?' checked':'')+'" onclick="toggleDone(\''+ t.id +'\')">'+
+      (done?'<svg width="12" height="10" viewBox="0 0 12 10"><polyline points="1,5 4.5,8.5 11,1.5" stroke="#F9F7F4" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')+'</div>'
+      +'<div class="task-body">'
+      +'<div class="task-title">'+esc(t.title)+'</div>'
+      +(t.due?'<div class="task-due" style="color:'+dueColor+'">Due '+formatDue(t.due)+'</div>':'')+'</div>'
+      +'<button class="del-btn" onclick="deleteTask(\''+ t.id +'\')">&times;</button>'
+      +'</div>';
   }).join('');
 }
 
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// Init
-loadLocal();
-const syncKey=getSyncKey();
-if(syncKey){
-  document.getElementById('setup').classList.add('hidden');
-  document.getElementById('main-app').style.display='flex';
-  render();
-  syncNow();
-} else { render(); }
+load(); render();
 </script>
 </body>
 </html>
