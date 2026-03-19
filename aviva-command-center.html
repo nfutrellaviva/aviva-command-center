@@ -377,6 +377,13 @@ function setSort(s,btn){
   btn.classList.add('active');render();
 }
 
+function updateDue(id, newDate){
+  const task = tasks.find(t=>t.id===id);
+  if(!task) return;
+  task.due = newDate;
+  save(); render();
+}
+
 function render(){
   const pOrder={urgent:0,high:1,normal:2};
   let visible=tasks.filter(t=>{
@@ -422,7 +429,10 @@ function render(){
       <div class="task-body">
         <div class="task-title">${escHtml(t.title)}</div>
         <div class="task-meta">${escHtml(t.detail)}${t.from?' &mdash; '+escHtml(t.from):''}</div>
-        ${t.due?'<div style="font-size:10px;margin-top:3px;color:'+( isDueUrgent(t.due)?'#c4763a':'rgba(249,247,244,0.3)')+';letter-spacing:0.04em">Due '+formatDue(t.due)+'</div>':''}
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          ${t.due?'<span style="font-size:10px;color:'+(isDueUrgent(t.due)?'#c4763a':'rgba(249,247,244,0.3)')+';letter-spacing:0.04em">Due '+formatDue(t.due)+'</span>':'<span style="font-size:10px;color:rgba(249,247,244,0.2);letter-spacing:0.04em">No due date</span>'}
+          <input type="date" value="${t.due||''}" onchange="updateDue('${t.id}', this.value)" style="font-size:10px;font-family:inherit;background:transparent;border:none;border-bottom:0.5px solid rgba(249,247,244,0.15);color:rgba(249,247,244,0.4);padding:1px 2px;cursor:pointer;color-scheme:dark;outline:none;width:auto" title="Change due date"/>
+        </div>
       </div>
       <div class="task-right">
         ${t.priority==='urgent'?'<span class="pri-badge urgent">urgent</span>':t.priority==='high'?'<span class="pri-badge high">high</span>':''}
