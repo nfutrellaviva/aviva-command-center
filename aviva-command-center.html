@@ -508,14 +508,18 @@ function saveMobileSyncKey(){
 }
 
 async function fetchMobile(){
-  // Both files are on the same domain (GitHub Pages) so they share localStorage!
+  document.getElementById('pill-mobile').innerHTML='<span class="dot dot-pulse"></span>Mobile — syncing...';
   try{
-    const raw = localStorage.getItem('aviva_mobile_shared');
-    if(!raw){
-      document.getElementById('pill-mobile').innerHTML='<span class="dot dot-warn"></span>Mobile — no tasks yet';
-      return false;
-    }
-    const data = JSON.parse(raw);
+    const res = await fetch('https://sxftnwjfqbnsyrccyzrk.supabase.co/rest/v1/mobile_tasks?id=eq.aviva-mobile-tasks&select=data', {
+      headers: {
+        'apikey': 'sb_publishable_eNB2PcRyjgBXc4EjqWFt1g_6d68hhbK',
+        'Authorization': 'Bearer sb_publishable_eNB2PcRyjgBXc4EjqWFt1g_6d68hhbK'
+      }
+    });
+    if(!res.ok) throw new Error('Fetch failed: '+res.status);
+    const rows = await res.json();
+    if(!rows || !rows.length) throw new Error('No mobile tasks yet');
+    const data = rows[0].data;
     const mobileTasks = (data.tasks||[]).filter(t=>t.source==='mobile');
     const mobileDone = new Set(data.doneIds||[]);
     tasks = tasks.filter(t=>t.source!=='mobile');
@@ -524,7 +528,7 @@ async function fetchMobile(){
     document.getElementById('pill-mobile').innerHTML='<span class="dot dot-ok"></span>Mobile — '+mobileTasks.length+' tasks';
     return true;
   }catch(e){
-    document.getElementById('pill-mobile').innerHTML='<span class="dot dot-warn"></span>Mobile — error reading tasks';
+    document.getElementById('pill-mobile').innerHTML='<span class="dot dot-warn"></span>Mobile — '+e.message.slice(0,30);
     return false;
   }
 }

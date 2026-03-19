@@ -17,7 +17,11 @@
   .wm-a{font-size:12px;font-weight:500;letter-spacing:0.2em;color:#F9F7F4}
   .wm-b{font-size:7px;letter-spacing:0.35em;color:rgba(249,247,244,0.4)}
   .header-right{display:flex;align-items:center;gap:8px}
-  .saved-indicator{font-size:11px;color:rgba(249,247,244,0.35);letter-spacing:0.03em}
+  .sync-indicator{font-size:11px;color:rgba(249,247,244,0.35);letter-spacing:0.03em}
+  .sync-btn{font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 14px;background:#7B4518;border:none;color:#F9F7F4;cursor:pointer;letter-spacing:0.06em}
+  .sync-btn:active{background:#8f5220}
+  .sync-btn.spinning{animation:blink 0.8s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
   .add-form{background:#191816;border-bottom:0.5px solid rgba(249,247,244,0.08);padding:14px 20px;flex-shrink:0}
   .add-input{width:100%;font-size:16px;font-family:'Plus Jakarta Sans',sans-serif;padding:12px 14px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.12);color:#F9F7F4;margin-bottom:10px;-webkit-appearance:none;border-radius:0}
   .add-input::placeholder{color:rgba(249,247,244,0.3)}
@@ -46,7 +50,6 @@
   .empty{text-align:center;padding:4rem 2rem;color:rgba(249,247,244,0.2);font-size:13px;letter-spacing:0.06em}
   .toast{position:fixed;bottom:max(24px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:#7B4518;color:#F9F7F4;font-size:12px;padding:10px 20px;letter-spacing:0.06em;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:99}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
 </style>
 </head>
 <body>
@@ -57,7 +60,8 @@
       <div class="wm-b">AESTHETICS</div>
     </div>
     <div class="header-right">
-      <span class="saved-indicator" id="saved-indicator">Ready</span>
+      <span class="sync-indicator" id="sync-indicator">Ready</span>
+      <button class="sync-btn" id="sync-btn" onclick="syncNow()">↺ Sync</button>
     </div>
   </div>
 
@@ -81,35 +85,65 @@
   </div>
 
   <div class="task-list" id="task-list"></div>
-
-
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const STORE = 'aviva_mobile_shared';
+const SUPA_URL = 'https://sxftnwjfqbnsyrccyzrk.supabase.co';
+const SUPA_KEY = 'sb_publishable_eNB2PcRyjgBXc4EjqWFt1g_6d68hhbK';
+const ROW_ID = 'aviva-mobile-tasks';
+const LOCAL_STORE = 'aviva_mobile_v3';
 let tasks = [], doneIds = new Set(), activeFilter = 'all', ctr = Date.now();
 
 function uid(){ return 'm'+(ctr++) }
 
-function save(){
-  try{ localStorage.setItem(STORE, JSON.stringify({tasks, doneIds:[...doneIds]})) }catch(e){}
-  const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('saved-indicator').textContent = 'Synced '+now;
+function saveLocal(){
+  try{ localStorage.setItem(LOCAL_STORE, JSON.stringify({tasks, doneIds:[...doneIds]})) }catch(e){}
 }
-
-function load(){
+function loadLocal(){
   try{
-    const d = JSON.parse(localStorage.getItem(STORE)||'null');
+    const d = JSON.parse(localStorage.getItem(LOCAL_STORE)||'null');
     if(d){ tasks=d.tasks||[]; doneIds=new Set(d.doneIds||[]); }
   }catch(e){}
 }
 
-function showToast(msg, dur=2000){
+function showToast(msg, dur=2200){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+async function syncNow(){
+  const btn=document.getElementById('sync-btn');
+  btn.classList.add('spinning'); btn.disabled=true;
+  document.getElementById('sync-indicator').textContent='Syncing...';
+  try{
+    const payload = {tasks, doneIds:[...doneIds], updatedAt: new Date().toISOString()};
+    const res = await fetch(SUPA_URL+'/rest/v1/mobile_tasks', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer '+SUPA_KEY,
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({id: ROW_ID, data: payload})
+    });
+    if(!res.ok){
+      const err = await res.text();
+      throw new Error(err);
+    }
+    const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('sync-indicator').textContent = 'Synced '+now;
+    showToast('Synced to dashboard!');
+    saveLocal();
+  }catch(e){
+    document.getElementById('sync-indicator').textContent = 'Sync failed';
+    showToast('Sync failed: '+e.message.slice(0,50));
+    console.error(e);
+  }
+  btn.classList.remove('spinning'); btn.disabled=false;
 }
 
 function addTask(){
@@ -120,25 +154,26 @@ function addTask(){
   if(!title) return;
   tasks.unshift({id:uid(),title,detail:'Added on iPhone',from:'Mobile',priority:pri.value,source:'mobile',due:due.value||''});
   inp.value=''; due.value='';
-  save(); render();
-  showToast('Task added');
+  saveLocal(); render();
+  showToast('Task added — syncing...');
+  setTimeout(syncNow, 300);
 }
 
 function toggleDone(id){
   doneIds.has(id)?doneIds.delete(id):doneIds.add(id);
-  save(); render();
+  saveLocal(); render();
+  setTimeout(syncNow, 300);
 }
 function deleteTask(id){
   tasks=tasks.filter(t=>t.id!==id); doneIds.delete(id);
-  save(); render();
+  saveLocal(); render();
+  setTimeout(syncNow, 300);
 }
 function setFilter(f,btn){
   activeFilter=f;
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active'); render();
 }
-
-
 
 function formatDue(d){
   if(!d) return '';
@@ -161,25 +196,29 @@ function render(){
   });
   vis.sort((a,b)=>pOrder[a.priority]-pOrder[b.priority]);
   if(!vis.length){ document.getElementById('task-list').innerHTML='<div class="empty">Nothing here.</div>'; return; }
-  const pc=p=>p==='urgent'?'#c4763a':p==='high'?'rgba(249,247,244,0.3)':' rgba(249,247,244,0.1)';
+  const pc=p=>p==='urgent'?'#c4763a':p==='high'?'rgba(249,247,244,0.3)':'rgba(249,247,244,0.1)';
   document.getElementById('task-list').innerHTML = vis.map(t=>{
     const done=doneIds.has(t.id);
     const dueColor=t.due&&new Date(t.due+'T00:00:00')<=new Date()?'#c4763a':'rgba(249,247,244,0.3)';
     return '<div class="task'+(done?' done':'')+'">'
       +'<div class="pri-bar" style="background:'+pc(t.priority)+'"></div>'
-      +'<div class="check'+(done?' checked':'')+'" onclick="toggleDone(\''+ t.id +'\')">'+
-      (done?'<svg width="12" height="10" viewBox="0 0 12 10"><polyline points="1,5 4.5,8.5 11,1.5" stroke="#F9F7F4" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')+'</div>'
+      +'<div class="check'+(done?' checked':'')+'" onclick="toggleDone(''+t.id+'')">'
+      +(done?'<svg width="12" height="10" viewBox="0 0 12 10"><polyline points="1,5 4.5,8.5 11,1.5" stroke="#F9F7F4" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')
+      +'</div>'
       +'<div class="task-body">'
       +'<div class="task-title">'+esc(t.title)+'</div>'
-      +(t.due?'<div class="task-due" style="color:'+dueColor+'">Due '+formatDue(t.due)+'</div>':'')+'</div>'
-      +'<button class="del-btn" onclick="deleteTask(\''+ t.id +'\')">&times;</button>'
+      +(t.due?'<div class="task-due" style="color:'+dueColor+'">Due '+formatDue(t.due)+'</div>':'')
+      +'</div>'
+      +'<button class="del-btn" onclick="deleteTask(''+t.id+'')">&#215;</button>'
       +'</div>';
   }).join('');
 }
 
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-load(); render();
+loadLocal(); render();
+// Auto-sync on load to get latest
+syncNow();
 </script>
 </body>
 </html>
