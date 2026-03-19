@@ -46,10 +46,7 @@
   .empty{text-align:center;padding:4rem 2rem;color:rgba(249,247,244,0.2);font-size:13px;letter-spacing:0.06em}
   .toast{position:fixed;bottom:max(24px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:#7B4518;color:#F9F7F4;font-size:12px;padding:10px 20px;letter-spacing:0.06em;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:99}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  .export-bar{background:rgba(123,69,24,0.12);border-top:0.5px solid rgba(123,69,24,0.25);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding-bottom:max(10px,env(safe-area-inset-bottom))}
-  .export-bar span{font-size:11px;color:rgba(249,247,244,0.4);letter-spacing:0.04em}
-  .export-btn{font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:6px 14px;background:#7B4518;border:none;color:#F9F7F4;cursor:pointer;letter-spacing:0.06em}
-  .export-btn:active{background:#8f5220}
+
 </style>
 </head>
 <body>
@@ -85,16 +82,13 @@
 
   <div class="task-list" id="task-list"></div>
 
-  <div class="export-bar">
-    <span>Copy tasks to import into dashboard</span>
-    <button class="export-btn" onclick="copyForDashboard()">Copy JSON</button>
-  </div>
+
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const STORE = 'aviva_mobile_v2';
+const STORE = 'aviva_mobile_shared';
 let tasks = [], doneIds = new Set(), activeFilter = 'all', ctr = Date.now();
 
 function uid(){ return 'm'+(ctr++) }
@@ -102,7 +96,7 @@ function uid(){ return 'm'+(ctr++) }
 function save(){
   try{ localStorage.setItem(STORE, JSON.stringify({tasks, doneIds:[...doneIds]})) }catch(e){}
   const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('saved-indicator').textContent = 'Saved '+now;
+  document.getElementById('saved-indicator').textContent = 'Synced '+now;
 }
 
 function load(){
@@ -144,22 +138,7 @@ function setFilter(f,btn){
   btn.classList.add('active'); render();
 }
 
-function copyForDashboard(){
-  const mobileTasks = tasks.filter(t=>t.source==='mobile');
-  const json = JSON.stringify(mobileTasks.map(t=>({
-    title: t.title,
-    from: t.from,
-    detail: t.detail,
-    priority: t.priority,
-    key: t.id
-  })));
-  navigator.clipboard.writeText(json).then(()=>{
-    showToast('Copied! Paste into dashboard Outlook import box', 3000);
-  }).catch(()=>{
-    // fallback: show in prompt
-    prompt('Copy this JSON and paste into the dashboard:', json);
-  });
-}
+
 
 function formatDue(d){
   if(!d) return '';

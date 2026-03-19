@@ -208,7 +208,7 @@
         <div class="source-pills">
           <div class="src-pill" id="pill-granola"><span class="dot dot-warn"></span>Granola — not connected</div>
           <div class="src-pill" id="pill-outlook"><span class="dot dot-warn"></span>Outlook — paste below</div>
-          <div class="src-pill" id="pill-mobile"><span class="dot dot-warn"></span>Mobile — not connected</div>
+          <div class="src-pill" id="pill-mobile"><span class="dot dot-warn"></span>Mobile — no tasks yet</div>
           <div class="src-pill"><span class="dot dot-ok"></span>Manual todos — ready</div>
         </div>
       </div>
@@ -508,39 +508,23 @@ function saveMobileSyncKey(){
 }
 
 async function fetchMobile(){
-  const key = localStorage.getItem('aviva_mobile_sync_key')||'';
-  if(!key){
-    document.getElementById('pill-mobile').innerHTML='<span class="dot dot-warn"></span>Mobile — no sync key';
-    return false;
-  }
-  const blobId = localStorage.getItem('aviva_mobile_blob_id')||'';
-  document.getElementById('pill-mobile').innerHTML='<span class="dot dot-pulse"></span>Mobile — syncing...';
+  // Both files are on the same domain (GitHub Pages) so they share localStorage!
   try{
-    // Search for blob by sync key - try stored blob ID first
-    let data = null;
-    if(blobId){
-      const res = await fetch('https://jsonblob.com/api/jsonBlob/'+blobId, {headers:{Accept:'application/json'}});
-      if(res.ok){
-        data = await res.json();
-        if(data.syncKey !== key) data = null; // wrong key
-      }
+    const raw = localStorage.getItem('aviva_mobile_shared');
+    if(!raw){
+      document.getElementById('pill-mobile').innerHTML='<span class="dot dot-warn"></span>Mobile — no tasks yet';
+      return false;
     }
-    if(!data) throw new Error('Blob not found');
+    const data = JSON.parse(raw);
     const mobileTasks = (data.tasks||[]).filter(t=>t.source==='mobile');
     const mobileDone = new Set(data.doneIds||[]);
-    // Merge: remove old mobile tasks, add fresh ones
     tasks = tasks.filter(t=>t.source!=='mobile');
     tasks = [...mobileTasks, ...tasks];
-    // Merge done IDs
     mobileDone.forEach(id=>doneIds.add(id));
     document.getElementById('pill-mobile').innerHTML='<span class="dot dot-ok"></span>Mobile — '+mobileTasks.length+' tasks';
     return true;
   }catch(e){
-    document.getElementById('pill-mobile').innerHTML='<span class="dot dot-warn"></span>Mobile — enter blob ID below';
-    // Show helper
-    const msg = document.getElementById('mobile-sync-msg');
-    msg.style.display='block';
-    msg.textContent='Paste the blob ID from your iPhone app to connect.';
+    document.getElementById('pill-mobile').innerHTML='<span class="dot dot-warn"></span>Mobile — error reading tasks';
     return false;
   }
 }
