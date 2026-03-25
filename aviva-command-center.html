@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Aviva Aesthetics — Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#111110;font-family:'Plus Jakarta Sans',sans-serif;color:#F9F7F4}
+  a{color:#c4763a;text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ── Layout ── */
+  .app{min-height:100vh;display:flex;flex-direction:column}
+  .navbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:0.5px solid rgba(249,247,244,0.08);background:#191816}
+  .nav-brand{display:flex;align-items:center;gap:14px}
+  .wordmark{display:flex;flex-direction:column;gap:1px}
+  .wm-a{font-size:14px;font-weight:500;letter-spacing:0.2em;color:#F9F7F4}
+  .wm-b{font-size:8px;letter-spacing:0.35em;color:rgba(249,247,244,0.4)}
+  .nav-title{font-size:13px;color:rgba(249,247,244,0.55);letter-spacing:0.08em;border-left:0.5px solid rgba(249,247,244,0.15);padding-left:14px}
+  .nav-right{display:flex;align-items:center;gap:10px}
+  .sync-time{font-size:11px;color:rgba(249,247,244,0.35);letter-spacing:0.04em}
+  .btn-primary{font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:8px 18px;background:#7B4518;border:none;color:#F9F7F4;cursor:pointer;letter-spacing:0.08em;transition:background 0.15s}
+  .btn-primary:hover{background:#8f5220}
+  .btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+  .btn-primary.spinning .spin{display:inline-block;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .main{flex:1;display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 57px)}
+
+  /* ── Sidebar ── */
+  .sidebar{background:#191816;border-right:0.5px solid rgba(249,247,244,0.08);padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-y:auto}
+  .sidebar-section{display:flex;flex-direction:column;gap:10px}
+  .sidebar-label{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(249,247,244,0.3);margin-bottom:4px}
+
+  /* API Key */
+  .api-card{background:rgba(123,69,24,0.1);border:0.5px solid rgba(123,69,24,0.35);padding:14px}
+  .api-card-title{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#c4763a;margin-bottom:8px}
+  .api-card p{font-size:11px;color:rgba(249,247,244,0.5);line-height:1.6;margin-bottom:10px}
+  .api-input-row{display:flex;gap:6px}
+  .api-input-row input{flex:1;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 10px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.15);color:#F9F7F4;min-width:0}
+  .api-input-row input::placeholder{color:rgba(249,247,244,0.25)}
+  .api-input-row input:focus{outline:none;border-color:rgba(123,69,24,0.7)}
+  .api-input-row button{font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 12px;background:#7B4518;border:none;color:#F9F7F4;cursor:pointer;white-space:nowrap}
+  .api-input-row button:hover{background:#8f5220}
+  .api-status{font-size:11px;margin-top:8px;color:#c4763a;display:none}
+
+  /* Source pills */
+  .source-pills{display:flex;flex-direction:column;gap:6px}
+  .src-pill{font-size:11px;padding:7px 10px;border:0.5px solid rgba(249,247,244,0.1);color:rgba(249,247,244,0.45);display:flex;align-items:center;gap:7px;letter-spacing:0.03em}
+  .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .dot-ok{background:#7B4518}
+  .dot-warn{background:rgba(249,247,244,0.2)}
+  .dot-pulse{background:#c4763a;animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+  /* Outlook import */
+  .import-card{background:rgba(249,247,244,0.03);border:0.5px solid rgba(249,247,244,0.08);padding:14px}
+  .import-card-title{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(249,247,244,0.4);margin-bottom:8px}
+  .prompt-box{font-size:10px;font-family:monospace;background:rgba(0,0,0,0.3);border:0.5px solid rgba(249,247,244,0.08);padding:9px 10px;color:#c4763a;line-height:1.6;margin-bottom:8px;word-break:break-word;cursor:text;user-select:all}
+  .copy-btn{font-size:10px;font-family:'Plus Jakarta Sans',sans-serif;padding:5px 10px;background:rgba(123,69,24,0.3);border:0.5px solid rgba(123,69,24,0.4);color:rgba(249,247,244,0.7);cursor:pointer;letter-spacing:0.04em;width:100%;margin-bottom:8px}
+  .copy-btn:hover{background:rgba(123,69,24,0.5)}
+  .import-card textarea{width:100%;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:8px 10px;background:rgba(249,247,244,0.04);border:0.5px solid rgba(249,247,244,0.12);color:#F9F7F4;resize:vertical;min-height:70px;margin-bottom:8px}
+  .import-card textarea::placeholder{color:rgba(249,247,244,0.2)}
+  .import-card textarea:focus{outline:none;border-color:rgba(123,69,24,0.7)}
+  .import-btn{font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 14px;background:rgba(123,69,24,0.5);border:0.5px solid rgba(123,69,24,0.5);color:#F9F7F4;cursor:pointer;width:100%;letter-spacing:0.06em}
+  .import-btn:hover{background:#7B4518}
+  .import-msg{font-size:11px;color:#c4763a;margin-top:6px;display:none}
+
+  /* Manual add */
+  .add-card{background:rgba(249,247,244,0.03);border:0.5px solid rgba(249,247,244,0.08);padding:14px}
+  .add-card input{width:100%;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;padding:8px 10px;background:rgba(249,247,244,0.04);border:0.5px solid rgba(249,247,244,0.12);color:#F9F7F4;margin-bottom:8px}
+  .add-card input::placeholder{color:rgba(249,247,244,0.25)}
+  .add-card input:focus{outline:none;border-color:rgba(123,69,24,0.7)}
+  .add-card-row{display:flex;gap:6px}
+  .add-card select{flex:1;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 8px;background:rgba(249,247,244,0.04);border:0.5px solid rgba(249,247,244,0.12);color:#F9F7F4}
+  .add-card select option{background:#191816}
+  .add-card button{font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 14px;background:#7B4518;border:none;color:#F9F7F4;cursor:pointer;white-space:nowrap}
+  .add-card button:hover{background:#8f5220}
+
+  /* ── Content ── */
+  .content{background:#111110;padding:28px 32px;overflow-y:auto;display:flex;flex-direction:column;gap:20px}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:rgba(249,247,244,0.06);border:0.5px solid rgba(249,247,244,0.06)}
+  .stat{background:#111110;padding:18px 20px}
+  .stat-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(249,247,244,0.3);margin-bottom:8px}
+  .stat-val{font-size:28px;font-weight:300;color:#F9F7F4}
+  .stat-val.hot{color:#c4763a}
+
+  /* Filters */
+  .filter-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .filter-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(249,247,244,0.25);margin-right:4px}
+  .filter-btn{font-size:11px;padding:5px 14px;border:0.5px solid rgba(249,247,244,0.12);background:transparent;color:rgba(249,247,244,0.4);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:0.04em;transition:all 0.15s}
+  .filter-btn:hover{color:rgba(249,247,244,0.7)}
+  .filter-btn.active{border-color:rgba(123,69,24,0.6);color:#F9F7F4;background:rgba(123,69,24,0.12)}
+
+  /* Task list */
+  .task-list{display:flex;flex-direction:column;gap:1px}
+  .task{background:#191816;border:0.5px solid rgba(249,247,244,0.06);padding:14px 16px;display:flex;align-items:flex-start;gap:12px;transition:border-color 0.15s}
+  .task:hover{border-color:rgba(249,247,244,0.12)}
+  .task.done{opacity:0.3}
+  .task.done .task-title{text-decoration:line-through}
+  .pri-bar{width:2px;height:100%;flex-shrink:0;align-self:stretch;margin-top:2px}
+  .check{width:17px;height:17px;border:0.5px solid rgba(249,247,244,0.2);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:2px;transition:all 0.15s}
+  .check:hover{border-color:#7B4518}
+  .check.checked{background:#7B4518;border-color:#7B4518}
+  .task-body{flex:1;min-width:0}
+  .task-title{font-size:13px;font-weight:500;color:#F9F7F4;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .task-meta{font-size:11px;color:rgba(249,247,244,0.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .task-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .src-tag{font-size:10px;padding:2px 8px;border:0.5px solid rgba(249,247,244,0.1);color:rgba(249,247,244,0.3);letter-spacing:0.08em;text-transform:uppercase}
+  .src-tag.outlook{border-color:rgba(123,69,24,0.35);color:#c4763a}
+  .src-tag.granola{border-color:rgba(123,69,24,0.35);color:#c4763a}
+  .pri-badge{font-size:10px;padding:2px 8px;letter-spacing:0.06em;text-transform:uppercase}
+  .pri-badge.urgent{background:rgba(196,118,58,0.12);border:0.5px solid rgba(196,118,58,0.3);color:#c4763a}
+  .pri-badge.high{background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.12);color:rgba(249,247,244,0.45)}
+  .del-btn{font-size:16px;color:rgba(249,247,244,0.15);cursor:pointer;background:none;border:none;font-family:inherit;line-height:1;padding:0 2px;transition:color 0.15s}
+  .del-btn:hover{color:rgba(196,118,58,0.7)}
+  .empty{text-align:center;padding:4rem 2rem;color:rgba(249,247,244,0.2);font-size:13px;letter-spacing:0.06em;border:0.5px solid rgba(249,247,244,0.05)}
+
+  /* Ask Claude */
+  .ask-row{display:flex;gap:8px}
+  .ask-btn{flex:1;padding:11px;border:0.5px solid rgba(123,69,24,0.3);background:transparent;color:rgba(249,247,244,0.4);font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:0.06em;transition:all 0.15s}
+  .ask-btn:hover{background:rgba(123,69,24,0.08);color:#F9F7F4;border-color:rgba(123,69,24,0.5)}
+
+  /* Setup overlay */
+  .setup-overlay{display:none;position:fixed;inset:0;background:rgba(17,17,16,0.92);z-index:100;align-items:center;justify-content:center}
+  .setup-overlay.visible{display:flex}
+  .setup-modal{background:#191816;border:0.5px solid rgba(249,247,244,0.12);padding:36px 40px;max-width:440px;width:90%}
+  .setup-modal h2{font-size:18px;font-weight:400;letter-spacing:0.06em;margin-bottom:6px;color:#F9F7F4}
+  .setup-modal p{font-size:13px;color:rgba(249,247,244,0.5);line-height:1.7;margin-bottom:20px}
+  .setup-modal ol{font-size:12px;color:rgba(249,247,244,0.5);line-height:2;padding-left:18px;margin-bottom:20px}
+  .setup-modal ol li a{color:#c4763a}
+  .setup-input-row{display:flex;gap:8px;margin-bottom:10px}
+  .setup-input-row input{flex:1;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;padding:10px 12px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.15);color:#F9F7F4}
+  .setup-input-row input::placeholder{color:rgba(249,247,244,0.25)}
+  .setup-input-row input:focus{outline:none;border-color:rgba(123,69,24,0.7)}
+  .setup-note{font-size:11px;color:rgba(249,247,244,0.3);line-height:1.6}
+
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(249,247,244,0.1)}
+</style>
+</head>
+<body>
+
+<!-- Setup overlay -->
+<div class="setup-overlay visible" id="setup-overlay">
+  <div class="setup-modal">
+    <h2>Welcome to Command Center</h2>
+    <p>To enable live Granola and AI features, enter your Anthropic API key. Your key is stored only in your browser and never sent anywhere except Anthropic's API.</p>
+    <ol>
+      <li>Go to <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a></li>
+      <li>Create a new API key</li>
+      <li>Paste it below</li>
+    </ol>
+    <div class="setup-input-row">
+      <input type="password" id="setup-api-input" placeholder="sk-ant-..."/>
+      <button class="btn-primary" onclick="saveApiKey()">Save & continue</button>
+    </div>
+    <p class="setup-note">Your key is saved to localStorage on this device only. You can update it anytime in the sidebar.</p>
+  </div>
+</div>
+
+<div class="app">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <div class="wordmark">
+        <div class="wm-a">AVIVA</div>
+        <div class="wm-b">AESTHETICS</div>
+      </div>
+      <div class="nav-title">Command Center</div>
+    </div>
+    <div class="nav-right">
+      <span class="sync-time" id="sync-time">Never synced</span>
+      <button onclick="exportTasks()" style="font-size:11px;font-family:inherit;padding:8px 14px;background:transparent;border:0.5px solid rgba(249,247,244,0.2);color:rgba(249,247,244,0.6);cursor:pointer;letter-spacing:0.06em" title="Export tasks as backup JSON">Export backup</button>
+      <label style="font-size:11px;font-family:inherit;padding:8px 14px;background:transparent;border:0.5px solid rgba(249,247,244,0.2);color:rgba(249,247,244,0.6);cursor:pointer;letter-spacing:0.06em" title="Restore from backup JSON">
+        Import backup
+        <input type="file" accept=".json" onchange="importTasksFromFile(event)" style="display:none"/>
+      </label>
+      <button class="btn-primary" id="refresh-btn" onclick="refreshAll()">
+        <span class="spin">↺</span>&nbsp; Refresh all
+      </button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">API connection</div>
+        <div class="api-card">
+          <div class="api-card-title">Anthropic API key</div>
+          <p>Required for Granola sync and AI prioritization.</p>
+          <div class="api-input-row">
+            <input type="password" id="api-key-input" placeholder="sk-ant-..."/>
+            <button onclick="saveApiKey()">Save</button>
+          </div>
+          <div class="api-status" id="api-status"></div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Sources</div>
+        <div class="source-pills">
+          <div class="src-pill" id="pill-granola"><span class="dot dot-warn"></span>Granola — click refresh</div>
+          <div class="src-pill" id="pill-outlook"><span class="dot dot-warn"></span>Outlook — paste below</div>
+          <div class="src-pill" id="pill-mobile"><span class="dot dot-warn"></span>Mobile — no tasks yet</div>
+          <div class="src-pill"><span class="dot dot-ok"></span>Manual todos — ready</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Import from Outlook</div>
+        <div class="import-card">
+          <div class="import-card-title">Claude in Chrome prompt</div>
+          <div class="prompt-box" id="outlook-prompt">Read all of my emails for today (read and unread) and return ONLY a JSON array of action items I need to follow up on: [{"title": "short action title", "from": "sender name", "detail": "one sentence context", "priority": "urgent or high or normal", "key": "sender+subject as a short unique string"}]. No other text, just the JSON array.</div>
+          <button class="copy-btn" onclick="copyOutlookPrompt()">Copy prompt to clipboard</button>
+          <textarea id="outlook-paste" placeholder="Paste Claude in Chrome's JSON response here..."></textarea>
+          <button class="import-btn" onclick="importOutlook()">Import Outlook tasks ↵</button>
+          <div class="import-msg" id="import-msg"></div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Main content -->
+    <section class="content">
+
+      <div style="background:#191816;border:0.5px solid rgba(249,247,244,0.08);padding:14px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(249,247,244,0.3);white-space:nowrap">Add task</div>
+        <input type="text" id="new-task-input" placeholder="What needs to be done?" onkeydown="if(event.key==='Enter')addManual()" style="flex:2;min-width:160px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 12px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.12);color:#F9F7F4"/>
+        <select id="new-task-priority" style="font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 10px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.12);color:#F9F7F4">
+          <option value="urgent">Urgent</option>
+          <option value="high">High</option>
+          <option value="normal" selected>Normal</option>
+        </select>
+        <input type="date" id="new-task-due" title="Due date (optional)" style="font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 10px;background:rgba(249,247,244,0.05);border:0.5px solid rgba(249,247,244,0.12);color:#F9F7F4;color-scheme:dark"/>
+        <button onclick="addManual()" style="font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;padding:7px 18px;background:#7B4518;border:none;color:#F9F7F4;cursor:pointer;white-space:nowrap;letter-spacing:0.06em">+ Add task</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Open tasks</div><div class="stat-val" id="s-total">0</div></div>
+        <div class="stat"><div class="stat-label">Urgent</div><div class="stat-val hot" id="s-urgent">0</div></div>
+        <div class="stat"><div class="stat-label">From meetings</div><div class="stat-val" id="s-granola">0</div></div>
+        <div class="stat"><div class="stat-label">Completed today</div><div class="stat-val" id="s-done">0</div></div>
+      </div>
+
+      <div class="filter-row">
+        <span class="filter-label">View</span>
+        <button class="filter-btn active" onclick="setFilter('all',this)">All open</button>
+        <button class="filter-btn" onclick="setFilter('urgent',this)">Urgent</button>
+        <button class="filter-btn" onclick="setFilter('high',this)">High</button>
+        <button class="filter-btn" onclick="setFilter('outlook',this)">Outlook</button>
+        <button class="filter-btn" onclick="setFilter('granola',this)">Granola</button>
+        <button class="filter-btn" onclick="setFilter('manual',this)">Manual</button>
+        <button class="filter-btn" onclick="setFilter('done',this)">Done</button>
+        <button class="filter-btn" onclick="setFilter('recurring',this)">Recurring</button>
+      </div>
+      <div class="filter-row" style="margin-top:-10px">
+        <span class="filter-label">Sort</span>
+        <button class="filter-btn sort-btn active" onclick="setSort('priority',this)">By priority</button>
+        <button class="filter-btn sort-btn" onclick="setSort('due',this)">By due date</button>
+        <button class="filter-btn sort-btn" onclick="setSort('source',this)">By source</button>
+      </div>
+
+      <div id="task-list"></div>
+
+      <div class="ask-row">
+        <button class="ask-btn" onclick="askClaude('Help me prioritize all my open tasks and tell me what to tackle first today')">Ask Claude to prioritize my day ↗</button>
+        <button class="ask-btn" onclick="askClaude('Which of my tasks look like they need a reply email drafted?')">Draft reply emails for tasks ↗</button>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<script>
+let tasks=[], doneIds=new Set(), activeFilter='all', taskCounter=Date.now();
+const STORE_KEY='aviva_cc_v4';
+
+function uid(){return 't'+(taskCounter++)}
+
+function save(){
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({tasks,doneIds:[...doneIds]}))}catch(e){}
+}
+function loadSaved(){
+  try{
+    const d=JSON.parse(localStorage.getItem(STORE_KEY)||'null');
+    if(d){tasks=d.tasks||[];doneIds=new Set(d.doneIds||[])}
+  }catch(e){}
+}
+
+function getApiKey(){return localStorage.getItem('aviva_api_key')||''}
+function saveApiKey(){
+  const fromSetup=document.getElementById('setup-api-input');
+  const fromSidebar=document.getElementById('api-key-input');
+  const key=(fromSetup&&fromSetup.value.trim())||(fromSidebar&&fromSidebar.value.trim())||'';
+  if(!key){showApiStatus('Please enter a key first.','#c4763a');return}
+  if(!key.startsWith('sk-ant-')){showApiStatus('Key should start with sk-ant-','#c4763a');return}
+  localStorage.setItem('aviva_api_key',key);
+  if(fromSetup) fromSetup.value='';
+  if(fromSidebar) fromSidebar.value='';
+  showApiStatus('API key saved.','#7B4518');
+  document.getElementById('setup-overlay').classList.remove('visible');
+  refreshAll();
+}
+function showApiStatus(msg,color){
+  const el=document.getElementById('api-status');
+  el.style.display='block';el.style.color=color;el.textContent=msg;
+  setTimeout(()=>{el.style.display='none'},3000);
+}
+
+function copyOutlookPrompt(){
+  const text=document.getElementById('outlook-prompt').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.querySelector('.copy-btn');
+    const orig=btn.textContent;btn.textContent='Copied!';
+    setTimeout(()=>btn.textContent=orig,2000);
+  });
+}
+
+function importOutlook(){
+  const raw=document.getElementById('outlook-paste').value.trim();
+  const msg=document.getElementById('import-msg');
+  if(!raw){msg.style.display='block';msg.textContent='Paste the JSON from Claude in Chrome first.';return}
+  try{
+    let arr=JSON.parse(raw);
+    if(!Array.isArray(arr))arr=[arr];
+    const existingKeys=new Set(tasks.filter(t=>t.source==='outlook'&&t.emailKey).map(t=>t.emailKey));
+    let added=0,skipped=0;
+    arr.forEach(t=>{
+      const emailKey=((t.key||'')||(t.from||'')+(t.title||'')).toLowerCase().replace(/\s+/g,'').slice(0,60);
+      if(existingKeys.has(emailKey)){skipped++;return;}
+      tasks.unshift({id:uid(),title:t.title||'Untitled',detail:t.detail||'',from:t.from||'',priority:(t.priority||'normal').toLowerCase(),source:'outlook',emailKey});
+      existingKeys.add(emailKey);
+      added++;
+    });
+    document.getElementById('outlook-paste').value='';
+    document.getElementById('pill-outlook').innerHTML='<span class="dot dot-ok"></span>Outlook — '+tasks.filter(t=>t.source==='outlook').length+' tasks';
+    const skipNote=skipped>0?' ('+skipped+' already imported, skipped)':'';
+    msg.style.display='block';msg.textContent='Added '+added+' new task'+(added!==1?'s':'')+skipNote+'.';
+    save();render();
+  }catch(e){
+    msg.style.display='block';msg.textContent='Could not parse JSON. Check the format and try again.';
+  }
+}
+
+function addManual(){
+  const inp=document.getElementById('new-task-input');
+  const pri=document.getElementById('new-task-priority');
+  const due=document.getElementById('new-task-due');
+  const title=inp.value.trim();
+  if(!title)return;
+  tasks.unshift({id:uid(),title,detail:'Added manually',from:'You',priority:pri.value,source:'manual',due:due?due.value:''});
+  inp.value='';if(due)due.value='';save();render();
+}
+
+function toggleDone(id){
+  doneIds.has(id)?doneIds.delete(id):doneIds.add(id);
+  save();render();
+}
+function deleteTask(id){
+  tasks=tasks.filter(t=>t.id!==id);doneIds.delete(id);save();render();
+}
+let activeSort='priority';
+function setFilter(f,btn){
+  activeFilter=f;
+  document.querySelectorAll('.filter-btn:not(.sort-btn)').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');render();
+}
+function setSort(s,btn){
+  activeSort=s;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');render();
+}
+
+function updateDue(id, newDate){
+  const task = tasks.find(t=>t.id===id);
+  if(!task) return;
+  task.due = newDate;
+  save(); render();
+}
+
+function getNextDue(fromDate, interval, unit){
+  const d = fromDate ? new Date(fromDate+'T00:00:00') : new Date();
+  d.setHours(0,0,0,0);
+  const n = parseInt(interval)||1;
+  if(unit==='days') d.setDate(d.getDate()+n);
+  else if(unit==='weeks') d.setDate(d.getDate()+(n*7));
+  else if(unit==='months') d.setMonth(d.getMonth()+n);
+  return d.toISOString().slice(0,10);
+}
+
+function addRecurring(){
+  const inp = document.getElementById('rec-task-input');
+  const pri = document.getElementById('rec-task-priority');
+  const interval = document.getElementById('rec-interval').value||'1';
+  const unit = document.getElementById('rec-unit').value;
+  const start = document.getElementById('rec-start').value || new Date().toISOString().slice(0,10);
+  const title = inp.value.trim();
+  if(!title) return;
+  const task = {
+    id: uid(),
+    title,
+    detail: 'Repeats every '+interval+' '+unit,
+    from: 'You',
+    priority: pri.value,
+    source: 'manual',
+    due: start,
+    recurring: true,
+    recInterval: parseInt(interval),
+    recUnit: unit
+  };
+  tasks.unshift(task);
+  inp.value='';
+  document.getElementById('rec-start').value='';
+  save(); render();
+}
+
+function completeRecurring(id){
+  const task = tasks.find(t=>t.id===id);
+  if(!task||!task.recurring) return;
+  // Mark done and create next occurrence
+  doneIds.add(id);
+  const nextDue = getNextDue(task.due, task.recInterval, task.recUnit);
+  const nextTask = {
+    id: uid(),
+    title: task.title,
+    detail: task.detail,
+    from: task.from,
+    priority: task.priority,
+    source: 'manual',
+    due: nextDue,
+    recurring: true,
+    recInterval: task.recInterval,
+    recUnit: task.recUnit
+  };
+  tasks.unshift(nextTask);
+  save(); render();
+  showRecurringToast(nextDue);
+}
+
+function showRecurringToast(nextDue){
+  // Brief visual confirmation
+  const formatted = formatDue(nextDue);
+  const bar = document.createElement('div');
+  bar.style.cssText='position:fixed;bottom:24px;right:32px;background:#7B4518;color:#F9F7F4;font-size:12px;padding:10px 18px;letter-spacing:0.06em;z-index:999;opacity:0;transition:opacity 0.3s';
+  bar.textContent='Next due: '+formatted;
+  document.body.appendChild(bar);
+  setTimeout(()=>bar.style.opacity='1',10);
+  setTimeout(()=>{bar.style.opacity='0';setTimeout(()=>bar.remove(),300);},2500);
+}
+
+function render(){
+  const pOrder={urgent:0,high:1,normal:2};
+  let visible=tasks.filter(t=>{
+    if(activeFilter==='all') return !doneIds.has(t.id)&&!t.recurring;
+    if(activeFilter==='done') return doneIds.has(t.id);
+    if(activeFilter==='urgent') return !doneIds.has(t.id)&&t.priority==='urgent';
+    if(activeFilter==='high') return !doneIds.has(t.id)&&t.priority==='high';
+    if(activeFilter==='recurring') return !doneIds.has(t.id)&&t.recurring;
+    return !doneIds.has(t.id)&&t.source===activeFilter;
+  });
+  if(activeSort==='due'){
+    visible.sort((a,b)=>{
+      if(!a.due&&!b.due)return pOrder[a.priority]-pOrder[b.priority];
+      if(!a.due)return 1;
+      if(!b.due)return -1;
+      return a.due.localeCompare(b.due);
+    });
+  }else if(activeSort==='source'){
+    visible.sort((a,b)=>a.source.localeCompare(b.source)||(pOrder[a.priority]-pOrder[b.priority]));
+  }else{
+    visible.sort((a,b)=>pOrder[a.priority]-pOrder[b.priority]);
+  }
+
+  const open=tasks.filter(t=>!doneIds.has(t.id));
+  const nonRecurring = open.filter(t=>!t.recurring);
+  document.getElementById('s-total').textContent=nonRecurring.length;
+  document.getElementById('s-urgent').textContent=open.filter(t=>t.priority==='urgent').length;
+  document.getElementById('s-granola').textContent=open.filter(t=>t.source==='granola').length;
+  document.getElementById('s-done').textContent=doneIds.size;
+
+  if(!visible.length){
+    document.getElementById('task-list').innerHTML='<div class="empty">No tasks in this view — you\'re clear.</div>';
+    return;
+  }
+
+  let html='<div class="task-list">';
+  visible.forEach(t=>{
+    const done=doneIds.has(t.id);
+    const priColor=t.priority==='urgent'?'#c4763a':t.priority==='high'?'rgba(249,247,244,0.25)':'rgba(249,247,244,0.08)';
+    html+=`<div class="task${done?' done':''}">
+      <div style="width:2px;align-self:stretch;background:${priColor};flex-shrink:0;margin-top:0"></div>
+      <div class="check${done?' checked':''}" onclick="${t.recurring&&!done?'completeRecurring':'toggleDone'}('${t.id}')">
+        ${done?'<svg width="10" height="8" viewBox="0 0 10 8"><polyline points="1,4 3.5,6.5 9,1" stroke="#F9F7F4" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+      </div>
+      <div class="task-body">
+        <div class="task-title">${escHtml(t.title)}</div>
+        <div class="task-meta">${escHtml(t.detail)}${t.from?' &mdash; '+escHtml(t.from):''}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          ${t.due?'<span style="font-size:10px;color:'+(isDueUrgent(t.due)?'#c4763a':'rgba(249,247,244,0.3)')+';letter-spacing:0.04em">Due '+formatDue(t.due)+'</span>':'<span style="font-size:10px;color:rgba(249,247,244,0.2);letter-spacing:0.04em">No due date</span>'}
+          <input type="date" value="${t.due||''}" onchange="updateDue('${t.id}', this.value)" style="font-size:10px;font-family:inherit;background:transparent;border:none;border-bottom:0.5px solid rgba(249,247,244,0.15);color:rgba(249,247,244,0.4);padding:1px 2px;cursor:pointer;color-scheme:dark;outline:none;width:auto" title="Change due date"/>
+        </div>
+      </div>
+      <div class="task-right">
+        ${t.priority==='urgent'?'<span class="pri-badge urgent">urgent</span>':t.priority==='high'?'<span class="pri-badge high">high</span>':''}
+        <span class="src-tag ${(t.source==='outlook'||t.source==='granola')?t.source:''}">${escHtml(t.source)}</span>
+        ${t.recurring?'<span style="font-size:10px;padding:2px 7px;border:0.5px solid rgba(123,69,24,0.4);color:#c4763a;letter-spacing:0.06em;text-transform:uppercase">'+t.recInterval+'x/'+t.recUnit.slice(0,-1)+'</span>':''}
+        <button class="del-btn" onclick="deleteTask('${t.id}')">×</button>
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  document.getElementById('task-list').innerHTML=html;
+}
+
+function formatDue(d){
+  if(!d)return '';
+  const dt=new Date(d+'T00:00:00');
+  const today=new Date();today.setHours(0,0,0,0);
+  const diff=Math.round((dt-today)/(1000*60*60*24));
+  if(diff===0)return 'Today';
+  if(diff===1)return 'Tomorrow';
+  if(diff===-1)return 'Yesterday';
+  if(diff<0)return 'Overdue '+Math.abs(diff)+'d ago';
+  if(diff<7)return 'In '+diff+'d';
+  return dt.toLocaleDateString([],{month:'short',day:'numeric'});
+}
+function isDueUrgent(d){
+  if(!d)return false;
+  const dt=new Date(d+'T00:00:00');
+  const today=new Date();today.setHours(0,0,0,0);
+  return dt<=today;
+}
+function escHtml(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function fetchGranola(){
+  const key=getApiKey();
+  if(!key){
+    document.getElementById('pill-granola').innerHTML='<span class="dot dot-warn"></span>Granola — need API key';
+    return false;
+  }
+  document.getElementById('pill-granola').innerHTML='<span class="dot dot-pulse"></span>Granola — syncing...';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:2000,
+        system:`You have access to the Granola MCP tool. Use it to fetch the user's recent meetings from the last 30 days and extract all action items assigned to Nathalie. Return ONLY valid JSON with no markdown:
+{"tasks":[{"id":"<short unique id>","title":"<clear action title, max 60 chars>","detail":"<one sentence of context>","from":"<meeting name>","priority":"urgent"|"high"|"normal"}]}
+Max 20 tasks. Only include genuine action items for Nathalie, not items for other people.`,
+        messages:[{role:'user',content:'Fetch my Granola meetings and extract my action items.'}],
+        mcp_servers:[{type:'url',url:'https://mcp.granola.ai/mcp',name:'granola-mcp'}]
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+    const match=text.match(/\{[\s\S]*\}/);
+    if(!match)throw new Error('No task data returned');
+    const parsed=JSON.parse(match[0]);
+    const newTasks=(parsed.tasks||[]).map(t=>({...t,id:'g_'+t.id,source:'granola'}));
+    tasks=tasks.filter(t=>t.source!=='granola');
+    tasks=[...newTasks,...tasks];
+    document.getElementById('pill-granola').innerHTML=`<span class="dot dot-ok"></span>Granola — ${newTasks.length} tasks`;
+    return true;
+  }catch(e){
+    document.getElementById('pill-granola').innerHTML='<span class="dot dot-warn"></span>Granola — sync failed';
+    console.error('Granola fetch error:',e);
+    return false;
+  }
+}
+
+function saveMobileSyncKey(){
+  const inp = document.getElementById('mobile-sync-key');
+  const key = (inp.value||'').trim().toLowerCase().replace(/\s+/g,'-');
+  if(!key) return;
+  localStorage.setItem('aviva_mobile_sync_key', key);
+  inp.value = '';
+  const msg = document.getElementById('mobile-sync-msg');
+  msg.style.display='block'; msg.textContent='Sync key saved. Pulling mobile tasks...';
+  setTimeout(()=>msg.style.display='none', 3000);
+  fetchMobile();
+}
+
+async function fetchMobile(){
+  document.getElementById('pill-mobile').innerHTML='<span class="dot dot-pulse"></span>Mobile — syncing...';
+  try{
+    const res = await fetch('https://sxftnwjfqbnsyrccyzrk.supabase.co/rest/v1/mobile_tasks?id=eq.aviva-mobile-tasks&select=data', {
+      headers: {
+        'apikey': 'sb_publishable_eNB2PcRyjgBXc4EjqWFt1g_6d68hhbK',
+        'Authorization': 'Bearer sb_publishable_eNB2PcRyjgBXc4EjqWFt1g_6d68hhbK'
+      }
+    });
+    if(!res.ok) throw new Error('Fetch failed: '+res.status);
+    const rows = await res.json();
+    if(!rows || !rows.length) throw new Error('No mobile tasks yet');
+    const data = rows[0].data;
+    const mobileTasks = (data.tasks||[]).filter(t=>t.source==='mobile');
+    const mobileDone = new Set(data.doneIds||[]);
+    tasks = tasks.filter(t=>t.source!=='mobile');
+    tasks = [...mobileTasks, ...tasks];
+    mobileDone.forEach(id=>doneIds.add(id));
+    document.getElementById('pill-mobile').innerHTML='<span class="dot dot-ok"></span>Mobile — '+mobileTasks.length+' tasks';
+    return true;
+  }catch(e){
+    document.getElementById('pill-mobile').innerHTML='<span class="dot dot-warn"></span>Mobile — '+e.message.slice(0,30);
+    return false;
+  }
+}
+
+async function refreshAll(){
+  const btn=document.getElementById('refresh-btn');
+  btn.classList.add('spinning');btn.disabled=true;
+  document.getElementById('sync-time').textContent='Syncing...';
+  await Promise.all([fetchGranola(), fetchMobile()]);
+  save();render();
+  const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('sync-time').textContent='Last synced '+now;
+  btn.classList.remove('spinning');btn.disabled=false;
+}
+
+function askClaude(prompt){
+  const taskSummary=tasks.filter(t=>!doneIds.has(t.id)).map(t=>`[${t.priority.toUpperCase()}][${t.source}] ${t.title} — ${t.detail}`).join('\n');
+  const full=prompt+'\n\nMy current open tasks:\n'+taskSummary;
+  window.open('https://claude.ai/new?q='+encodeURIComponent(full),'_blank');
+}
+
+function exportTasks(){
+  const data = JSON.stringify({tasks, doneIds:[...doneIds]}, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'aviva-tasks-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function importTasksFromFile(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      const d = JSON.parse(ev.target.result);
+      tasks = d.tasks||[]; doneIds = new Set(d.doneIds||[]);
+      save(); render();
+      alert('Imported '+tasks.length+' tasks successfully!');
+    }catch(err){ alert('Could not read backup file.'); }
+  };
+  reader.readAsText(file);
+}
+
+// Init
+loadSaved();
+
+// Migrate from v3 if exists
+const v3data = localStorage.getItem('aviva_cc_v3');
+if(v3data && tasks.length === 0){
+  try{
+    const v3 = JSON.parse(v3data);
+    tasks = v3.tasks||[]; doneIds = new Set(v3.doneIds||[]);
+    save();
+  }catch(e){}
+}
+// Seed tasks if localStorage is empty (first load on new device/URL)
+if(tasks.length === 0){
+  const seed = {"tasks": [{"id": "m1773953711591", "due": "2026-03-19", "from": "Mobile", "title": "Test", "detail": "Added on iPhone", "source": "mobile", "priority": "normal"}, {"id": "t1773954885683", "title": "share back the learnings from the zenoti shit list to the board members", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-10"}, {"id": "t1773954885682", "title": "get details for FIGS store set up", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-08"}, {"id": "t1773954885681", "title": "explore buy now pay later options", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t1773954885680", "title": "Monitor Renew Medspa Zenoti SOW progress", "detail": "Shruti and team are preparing estimates and SOW for 8 new services and ~12 forms for Renew Medspa; Nawal Arora has been looped in and an update is expected shortly.", "from": "Siva Dev / Shruti Joshi", "priority": "normal", "source": "outlook", "emailKey": "sivadev-renew-medspa-sow"}, {"id": "t1773954885679", "title": "Follow up on iAesthetic Zenoti loyalty point glitch", "detail": "iAesthetic's referral rewards system is incorrectly awarding points to referrers on every purchase; client has been escalated to Zenoti engineering but no fix yet and rewards system is frozen.", "from": "iAesthetic MediSpa", "priority": "urgent", "source": "outlook", "emailKey": "iaesthetic-zenoti-loyalty-bug"}, {"id": "t1773954885678", "title": "Draft Ramp expense reimbursements (25 items)", "detail": "You have 25 pending expense items (Lyft $95.99, Uber $21.02, Uber Eats $67.76, United $16.00, and more) that need reimbursement drafts completed.", "from": "Ramp", "priority": "high", "source": "outlook", "emailKey": "ramp-weekly-digest-reimbursements"}, {"id": "t1773954885677", "title": "Reschedule NOON Aesthetics intro meeting", "detail": "Mitchell is grounded by flight delays and missed your 9am Zoom; he's asking if you're available next Friday 3/27 or the following week.", "from": "Mitchell Drinkard", "priority": "urgent", "source": "outlook", "emailKey": "drinkard-noon-reschedule"}, {"id": "t1773953014298", "title": "finish agenda for the partner call", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-03-26"}, {"id": "t1773953014297", "title": "Need to add membership retention the the master KPIs to track", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t1773953014296", "title": "finish notes for Illume and send recap", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-20"}, {"id": "t1773953014295", "title": "Await Zenoti CSM (Nawal) review of concerns list", "detail": "Zenoti assigned Nawal Arora as primary CSM to categorize the submitted concerns list into training gaps vs. product issues and propose training sessions.", "from": "Anant Srivastava", "priority": "normal", "source": "outlook", "emailKey": "anant-srivastava-zenoti-concerns-list"}, {"id": "t1773953014294", "title": "Follow up on Zenoti action items (Aviva package & CSM calls)", "detail": "Zenoti sent meeting minutes with open Aviva action items: begin internal alignment on Aviva Package definition and set up calls with new CSM Nawal for each existing Zenoti practice to address training/quick-fix items.", "from": "Anant Srivastava", "priority": "high", "source": "outlook", "emailKey": "anant-srivastava-zenoti-solution-best-practices"}, {"id": "t1773953014293", "title": "Review February Financials P&L (iAesthetics)", "detail": "Emily forwarded the February P&L from the accountant (Jim McMahon at D&A LLC); attachment flagged for your review.", "from": "Emily Hartsell", "priority": "high", "source": "outlook", "emailKey": "ehartsell-february-financials"}, {"id": "t1773953014292", "title": "Review Corral reconnect action items (flagged)", "detail": "Zach recapped post-meeting action items for Corral including disabling Executive Summary emails, GA4 attribution guide, KPI dictionary metric additions (rows 92–94), and Explore Data table cleanup.", "from": "Zachary Katsulis", "priority": "high", "source": "outlook", "emailKey": "zkatsulis-aviva-corral-reconnect"}, {"id": "t1773953014291", "title": "Register for Aviva/CorralData KPI Webinar (tomorrow)", "detail": "Webinar tomorrow featuring CorralData CEO and Aviva CMO on KPIs and scaling metrics; registration link in email.", "from": "Aviva Aesthetics", "priority": "high", "source": "outlook", "emailKey": "aviva-aesthetics-webinar-kpis-metrics"}, {"id": "t1773953014290", "title": "Prep for meeting with Mario Tanabe (Nitra Health)", "detail": "15-minute Zoom call scheduled for Friday March 20 at 1:00pm CT; Zoom link provided in reminder.", "from": "Mario Tanabe (via Calendly)", "priority": "urgent", "source": "outlook", "emailKey": "mario-tanabe-meeting-nitra-health"}, {"id": "t001", "title": "Update all Feb KPI & P&L in scorecard", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-24"}, {"id": "t002", "title": "Update all Jan KPIs & P&L data in the scorecard", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-23"}, {"id": "t003", "title": "Push a reminder to all for the Partner call", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-23"}, {"id": "t004", "title": "Schedule reminders for KPI pulls", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-26"}, {"id": "t005", "title": "follow up with Jessica/Benev on call details", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-23"}, {"id": "t006", "title": "compare patient fi and cherry - make the decision", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-24"}, {"id": "t007", "title": "complete goals in dashboard and send to Team", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-25"}, {"id": "t008", "title": "Need to have big rocks for Q2 for EOS meeting", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-26"}, {"id": "t009", "title": "Build out dashboard in Corral", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-03-26"}, {"id": "t010", "title": "Follow up Feb P&Ls", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-03-23"}, {"id": "t011", "title": "Confirm schedule for visiting Sarah 6/2 - 6/20", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-03-20"}, {"id": "t012", "title": "send luminate trip reminder email", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-25"}, {"id": "t013", "title": "schedule Luminate dinner for Thursday", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-20"}, {"id": "t014", "title": "change allergan/galderma pricing based on new agreement", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t015", "title": "Send quicksilver order to Amanda", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-24"}, {"id": "t016", "title": "Add quicksilver to the Hub", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t017", "title": "Add AnteAge to the Hub", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t018", "title": "Add PRX to the Hub", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t019", "title": "Send Suzanne the facial analysis tools for the website", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": ""}, {"id": "t020", "title": "respond to Mike/Paylocity email", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": ""}, {"id": "t021", "title": "Review Paylocity Admin & Employee SOPs from Jamie", "detail": "Jamie sent two sets of Paylocity SOPs (17 Admin/Corporate + 8 Employee level) for review", "from": "Jamie Ritter", "priority": "normal", "source": "outlook", "due": ""}, {"id": "t022", "title": "Await responses on website photo analysis vendor inquiry", "detail": "Nathalie emailed partner locations asking for the name, monthly cost, and contract details of their photo analysis vendor", "from": "Nathalie", "priority": "normal", "source": "outlook", "due": ""}, {"id": "t023", "title": "Acknowledge Agenda Template Canva link from Audrey", "detail": "Audrey sent the Aviva agenda template via Canva link after Nathalie requested it", "from": "Audrey", "priority": "normal", "source": "outlook", "due": ""}, {"id": "t024", "title": "Respond to EntityMed intro — schedule exploratory call", "detail": "Loreliz introduced Heather from EntityMed (AI simulation solutions) for an exploratory conversation", "from": "Loreliz", "priority": "normal", "source": "outlook", "due": ""}], "doneIds": ["t1773953014290", "m1773953711591", "t011", "t1773953014296", "t1773954885679", "t1773954885677"]};
+  tasks = seed.tasks; doneIds = new Set(seed.doneIds);
+  save();
+}
+
+// Pre-fill mobile sync key if already set
+const storedMobileKey = localStorage.getItem('aviva_mobile_sync_key');
+if(storedMobileKey){
+  const mki = document.getElementById('mobile-sync-key');
+  if(mki) mki.placeholder = 'Key saved: '+storedMobileKey.slice(0,16)+'...';
+}
+const storedKey=getApiKey();
+if(storedKey){
+  document.getElementById('setup-overlay').classList.remove('visible');
+  refreshAll();
+} else {
+  render();
+}
+</script>
+</body>
+</html>
