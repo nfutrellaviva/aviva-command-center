@@ -1807,7 +1807,7 @@ document.getElementById('greeting').textContent = (hr<12?'Good morning':hr<17?'G
 document.getElementById('syncTime').textContent = 'Loaded ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
 
 // Load data immediately and also on window load as fallback
-(function initApp() {
+setTimeout(function initApp() {() {() {
   const raw = localStorage.getItem('aviva_cc2');
   const d = JSON.parse(raw || '{}');
   S.tasks = d.tasks || TASKS_SEED.map(t=>({...t}));
@@ -1824,7 +1824,7 @@ document.getElementById('syncTime').textContent = 'Loaded ' + new Date().toLocal
   renderPartnerList();
   setTimeout(() => { fetchMobile(); }, 1000);
   setInterval(() => { fetchMobile(); }, 5 * 60 * 1000);
-})();
+}, 0);
 </script>
 </body>
 </html>
