@@ -152,7 +152,7 @@ a{color:#c4763a;text-decoration:none}
 <div class="navbar">
   <div class="nav-brand">
     <div class="wordmark"><span class="wm-a">AVIVA</span><span class="wm-b">AESTHETICS</span></div>
-    <span class="nav-title">Command Center 2.0</span>
+    <span class="nav-title">Command Center 2.0 ✓</span>
   </div>
   <div class="nav-right">
     <span id="syncTime" style="font-size:11px;color:rgba(249,247,244,0.3)"></span>
@@ -457,26 +457,22 @@ let editTaskId = null;
 function load() {
   try {
     const raw = localStorage.getItem('aviva_cc2');
-    if (raw) {
-      const d = JSON.parse(raw);
-      S.tasks = d.tasks || TASKS_SEED.map(t=>({...t}));
-      S.doneIds = new Set(d.doneIds || [...DONE_SEED]);
-      S.vp = d.vp || VP_SEED.map(t=>({...t}));
-      S.comms = d.comms || COMMS_SEED.map(t=>({...t}));
-      S.apiKey = d.apiKey || '';
-    } else {
-      S.tasks = TASKS_SEED.map(t=>({...t}));
-      S.doneIds = new Set(DONE_SEED);
-      S.vp = VP_SEED.map(t=>({...t}));
-      S.comms = COMMS_SEED.map(t=>({...t}));
-    }
+    const d = JSON.parse(raw || '{}');
+    S.tasks = d.tasks || TASKS_SEED.map(t=>({...t}));
+    S.doneIds = new Set(d.doneIds || [...DONE_SEED]);
+    S.vp = d.vp || VP_SEED.map(t=>({...t}));
+    S.comms = d.comms || COMMS_SEED.map(t=>({...t}));
+    S.apiKey = d.apiKey || '';
   } catch(e) {
     S.tasks = TASKS_SEED.map(t=>({...t}));
     S.doneIds = new Set(DONE_SEED);
     S.vp = VP_SEED.map(t=>({...t}));
     S.comms = COMMS_SEED.map(t=>({...t}));
   }
-  if (S.apiKey) { document.getElementById('apiKeyInput').value = S.apiKey; updateApiStatus(); }
+  if (S.apiKey) {
+    const ki = document.getElementById('apiKeyInput');
+    if (ki) { ki.value = S.apiKey; updateApiStatus(); }
+  }
   renderAll();
 }
 
@@ -895,11 +891,25 @@ const hr = new Date().getHours();
 document.getElementById('greeting').textContent = (hr<12?'Good morning':hr<17?'Good afternoon':'Good evening') + ', Nathalie';
 document.getElementById('syncTime').textContent = 'Loaded ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
 
-document.addEventListener('DOMContentLoaded', function() {
-  load();
-  setTimeout(() => { fetchMobile(); }, 800);
+// Load data immediately and also on window load as fallback
+(function initApp() {
+  const raw = localStorage.getItem('aviva_cc2');
+  const d = JSON.parse(raw || '{}');
+  S.tasks = d.tasks || TASKS_SEED.map(t=>({...t}));
+  S.doneIds = new Set(d.doneIds || [...DONE_SEED]);
+  S.vp = d.vp || VP_SEED.map(t=>({...t}));
+  S.comms = d.comms || COMMS_SEED.map(t=>({...t}));
+  S.apiKey = d.apiKey || '';
+  if (S.apiKey) {
+    const ki = document.getElementById('apiKeyInput');
+    if (ki) { ki.value = S.apiKey; updateApiStatus(); }
+  }
+  renderTasks();
+  renderKanban();
+  renderPartnerList();
+  setTimeout(() => { fetchMobile(); }, 1000);
   setInterval(() => { fetchMobile(); }, 5 * 60 * 1000);
-});
+})();
 </script>
 </body>
 </html>
