@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aviva Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#111110;font-family:'Plus Jakarta Sans',sans-serif;color:#f9f7f4;font-size:14px}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.navbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:0.5px solid rgba(249,247,244,0.08);background:#191816;position:sticky;top:0;z-index:100}
+.nav-brand{display:flex;align-items:center;gap:14px}
+.wordmark{display:flex;flex-direction:column;gap:1px}
+.wm-a{font-size:14px;font-weight:500;letter-spacing:0.2em;color:#f9f7f4}
+.wm-b{font-size:8px;letter-spacing:0.35em;color:rgba(249,247,244,0.4)}
+.nav-title{font-size:13px;color:rgba(249,247,244,0.55);letter-spacing:0.08em;border-left:0.5px solid rgba(249,247,244,0.15);padding-left:14px}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-btn{background:none;border:0.5px solid rgba(249,247,244,0.18);color:rgba(249,247,244,0.7);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit}
+.nav-btn:hover{background:rgba(249,247,244,0.06);color:#f9f7f4}
+.body-wrap{display:flex;flex:1;overflow:hidden}
+.sidebar{width:200px;min-width:200px;background:#191816;border-right:0.5px solid rgba(249,247,244,0.08);padding:20px 0;display:flex;flex-direction:column;height:calc(100vh - 53px);position:sticky;top:53px;overflow-y:auto}
+.sidebar-section{padding:0 16px 16px}
+.sidebar-label{font-size:10px;letter-spacing:0.12em;color:rgba(249,247,244,0.3);text-transform:uppercase;margin-bottom:8px;padding:0 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer;color:rgba(249,247,244,0.6);font-size:13px;transition:all 0.15s;margin-bottom:2px}
+.nav-item:hover{background:rgba(249,247,244,0.06);color:#f9f7f4}
+.nav-item.active{background:rgba(196,118,58,0.15);color:#c4763a;font-weight:500}
+.main{flex:1;overflow-y:auto;padding:28px 32px;height:calc(100vh - 53px)}
+.page{display:none}
+.page.active{display:block}
+.page-title{font-size:18px;font-weight:500;margin-bottom:6px}
+.page-sub{font-size:13px;color:rgba(249,247,244,0.45);margin-bottom:24px}
+.stats-row{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.stat-pill{background:#191816;border:0.5px solid rgba(249,247,244,0.08);border-radius:8px;padding:8px 14px;font-size:12px;color:rgba(249,247,244,0.6)}
+.stat-pill b{color:#f9f7f4;font-weight:600;margin-right:4px}
+.stat-pill.urgent b{color:#e87070}
+.add-task-form{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.add-task-input{flex:1;min-width:200px;background:#191816;border:0.5px solid rgba(249,247,244,0.12);color:#f9f7f4;padding:8px 12px;border-radius:6px;font-family:inherit;font-size:13px;outline:none}
+.add-task-input:focus{border-color:rgba(196,118,58,0.5)}
+.add-task-input::placeholder{color:rgba(249,247,244,0.25)}
+.btn-primary{background:#7b4518;border:none;color:#f9f7f4;padding:8px 14px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;white-space:nowrap}
+.btn-primary:hover{background:#8f5120}
+select.form-select,input.form-input{background:#191816;border:0.5px solid rgba(249,247,244,0.12);color:#f9f7f4;padding:8px 11px;border-radius:6px;font-family:inherit;font-size:13px;outline:none}
+.task-controls{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-label{font-size:10px;color:rgba(249,247,244,0.3);letter-spacing:0.08em}
+.filter-btn{background:none;border:0.5px solid rgba(249,247,244,0.15);color:rgba(249,247,244,0.5);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit}
+.filter-btn:hover,.filter-btn.active{background:rgba(196,118,58,0.15);border-color:rgba(196,118,58,0.4);color:#c4763a}
+.task-list{display:flex;flex-direction:column;gap:6px}
+.task-item{background:#191816;border:0.5px solid rgba(249,247,244,0.06);border-radius:8px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px}
+.task-item:hover{border-color:rgba(249,247,244,0.14)}
+.task-item.done{opacity:0.45}
+.task-check{width:16px;height:16px;min-width:16px;border:0.5px solid rgba(249,247,244,0.25);border-radius:3px;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px}
+.task-check.checked{background:#7b4518;border-color:#7b4518;color:#f9f7f4}
+.task-body{flex:1;min-width:0}
+.task-title{font-size:13px;color:#f9f7f4;margin-bottom:4px;line-height:1.4}
+.task-item.done .task-title{text-decoration:line-through;color:rgba(249,247,244,0.35)}
+.task-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pri-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500}
+.pri-badge.urgent{background:rgba(220,60,50,0.15);color:#e87070;border:0.5px solid rgba(220,60,50,0.2)}
+.pri-badge.high{background:rgba(196,118,58,0.15);color:#e8a06a;border:0.5px solid rgba(196,118,58,0.2)}
+.pri-badge.normal{background:rgba(249,247,244,0.06);color:rgba(249,247,244,0.4);border:0.5px solid rgba(249,247,244,0.1)}
+.src-tag{font-size:10px;color:rgba(249,247,244,0.3)}
+.due-tag{font-size:10px;color:rgba(249,247,244,0.35)}
+.due-tag.overdue{color:#e87070}
+.due-tag.soon{color:#e8a06a}
+.edit-btn{background:none;border:0.5px solid rgba(249,247,244,0.1);color:rgba(249,247,244,0.4);padding:4px 8px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;flex-shrink:0}
+.edit-btn:hover{color:#f9f7f4;border-color:rgba(249,247,244,0.3)}
+.kanban-board{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;align-items:start;overflow-x:auto}
+.kanban-col{background:#191816;border:0.5px solid rgba(249,247,244,0.07);border-radius:10px;min-width:180px}
+.kanban-col-header{padding:12px 14px;border-bottom:0.5px solid rgba(249,247,244,0.07);display:flex;align-items:center;justify-content:space-between}
+.kanban-col-title{font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:rgba(249,247,244,0.6)}
+.kanban-count{font-size:11px;background:rgba(249,247,244,0.08);color:rgba(249,247,244,0.4);padding:2px 7px;border-radius:10px}
+.kanban-tasks{padding:10px;display:flex;flex-direction:column;gap:7px;min-height:60px}
+.kanban-task{background:#111110;border:0.5px solid rgba(249,247,244,0.07);border-radius:7px;padding:10px 11px;cursor:pointer}
+.kanban-task:hover{border-color:rgba(249,247,244,0.2)}
+.kanban-task-title{font-size:12px;color:#f9f7f4;line-height:1.45;margin-bottom:6px}
+.kanban-task-footer{display:flex;align-items:center;justify-content:space-between;gap:4px;flex-wrap:wrap}
+.status-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;white-space:nowrap}
+.status-ns{background:rgba(70,110,200,0.12);color:#7099e8;border:0.5px solid rgba(70,110,200,0.2)}
+.status-ip{background:rgba(100,100,100,0.15);color:rgba(249,247,244,0.55);border:0.5px solid rgba(100,100,100,0.2)}
+.status-wait{background:rgba(200,170,50,0.12);color:#d4b84a;border:0.5px solid rgba(200,170,50,0.2)}
+.status-done{background:rgba(40,160,100,0.12);color:#5cbf8a;border:0.5px solid rgba(40,160,100,0.2)}
+.status-defer{background:rgba(196,118,58,0.12);color:#c4763a;border:0.5px solid rgba(196,118,58,0.2)}
+.due-small{font-size:10px;color:rgba(249,247,244,0.3)}
+.due-small.soon{color:#e8a06a}
+.due-small.overdue{color:#e87070}
+.add-kanban-btn{width:100%;background:none;border:none;border-top:0.5px solid rgba(249,247,244,0.05);color:rgba(249,247,244,0.25);padding:8px;font-size:12px;cursor:pointer;font-family:inherit}
+.add-kanban-btn:hover{color:rgba(249,247,244,0.6);background:rgba(249,247,244,0.04)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#1e1d1b;border:0.5px solid rgba(249,247,244,0.12);border-radius:12px;padding:24px;width:500px;max-width:96vw;max-height:88vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:500;margin-bottom:18px}
+.form-row{margin-bottom:14px}
+.form-label{font-size:10px;color:rgba(249,247,244,0.35);margin-bottom:5px;letter-spacing:0.08em;text-transform:uppercase}
+.form-input,.form-select,.form-textarea{width:100%;background:#111110;border:0.5px solid rgba(249,247,244,0.12);color:#f9f7f4;padding:8px 11px;border-radius:6px;font-family:inherit;font-size:13px;outline:none}
+.form-textarea{min-height:120px;resize:vertical;line-height:1.6}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.btn-cancel{background:none;border:0.5px solid rgba(249,247,244,0.15);color:rgba(249,247,244,0.5);padding:7px 14px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px}
+.btn-cancel:hover{color:#f9f7f4;border-color:rgba(249,247,244,0.3)}
+.btn-delete{background:none;border:0.5px solid rgba(220,60,50,0.3);color:#e87070;padding:7px 14px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px;margin-right:auto}
+.empty-state{color:rgba(249,247,244,0.25);font-size:13px;padding:40px 20px;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="navbar">
+  <div class="nav-brand">
+    <div class="wordmark"><span class="wm-a">AVIVA</span><span class="wm-b">AESTHETICS</span></div>
+    <span class="nav-title">Command Center</span>
+  </div>
+  <div class="nav-right">
+    <span id="syncTime" style="font-size:11px;color:rgba(249,247,244,0.3)"></span>
+    <button class="nav-btn" onclick="exportBackup()">Export backup</button>
+  </div>
+</div>
+<div class="body-wrap">
+<div class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Navigation</div>
+    <div class="nav-item active" id="navTasks" onclick="showPage('tasks',this)"><span>✓</span> My Tasks</div>
+    <div class="nav-item" id="navVP" onclick="showPage('vp',this)"><span>◈</span> VP Plan</div>
+  </div>
+  <div style="height:0.5px;background:rgba(249,247,244,0.08);margin:0 16px 16px"></div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Mobile Sync</div>
+    <div id="mobileStatus" style="font-size:11px;color:rgba(249,247,244,0.45);margin-bottom:8px;line-height:1.5">Not synced yet</div>
+    <button class="nav-btn" style="width:100%;font-size:11px" onclick="syncMobile()">&#8635; Sync mobile now</button>
+  </div>
+</div>
+
+<div class="main">
+
+<div class="page active" id="page-tasks">
+  <div class="page-title">My Tasks</div>
+  <div class="page-sub">All your tasks in one place</div>
+  <div class="stats-row" id="statsRow"></div>
+  <div class="add-task-form">
+    <input class="add-task-input" id="newTaskInput" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTask()">
+    <select id="newTaskPri" class="form-select" style="width:110px">
+      <option value="normal">Normal</option>
+      <option value="high">High</option>
+      <option value="urgent">Urgent</option>
+    </select>
+    <input type="date" id="newTaskDue" class="form-input" style="width:150px">
+    <button class="btn-primary" onclick="addTask()">+ Add</button>
+  </div>
+  <div class="task-controls" id="taskFilters">
+    <span class="filter-label">VIEW</span>
+    <button class="filter-btn active" onclick="filterTasks('all',this)">All open</button>
+    <button class="filter-btn" onclick="filterTasks('urgent',this)">Urgent</button>
+    <button class="filter-btn" onclick="filterTasks('high',this)">High</button>
+    <button class="filter-btn" onclick="filterTasks('done',this)">Done</button>
+    <span class="filter-label" style="margin-left:8px">SORT</span>
+    <button class="filter-btn active" id="sortPri" onclick="setSort('priority',this)">By priority</button>
+    <button class="filter-btn" id="sortDue" onclick="setSort('due',this)">By due date</button>
+  </div>
+  <div class="task-list" id="taskList"></div>
+</div>
+
+<div class="page" id="page-vp">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <div class="page-title">Year 1 VP Plan</div>
+    <button class="btn-primary" onclick="openAddVp('')">+ Add Task</button>
+  </div>
+  <div class="page-sub" id="vpSub"></div>
+  <div class="kanban-board" id="kanbanBoard"></div>
+  <div style="margin-top:24px">
+    <div style="font-size:11px;font-weight:500;color:rgba(249,247,244,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">Completed</div>
+    <div class="task-list" id="vpDoneList"></div>
+  </div>
+</div>
+
+</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="editModal">
+<div class="modal">
+  <h3>Edit Task</h3>
+  <div class="form-row"><div class="form-label">Title</div><input class="form-input" id="editTitle"></div>
+  <div class="form-row"><div class="form-label">Priority</div>
+    <select class="form-select" id="editPri">
+      <option value="urgent">Urgent</option>
+      <option value="high">High</option>
+      <option value="normal">Normal</option>
+    </select>
+  </div>
+  <div class="form-row"><div class="form-label">Due Date</div><input type="date" class="form-input" id="editDue"></div>
+  <div class="form-row"><div class="form-label">Detail / Notes</div><textarea class="form-textarea" id="editDetail"></textarea></div>
+  <div class="modal-btns">
+    <button class="btn-delete" onclick="deleteEditTask()">Delete</button>
+    <button class="btn-cancel" onclick="closeModal('editModal')">Cancel</button>
+    <button class="btn-primary" onclick="saveEdit()">Save</button>
+  </div>
+</div>
+</div>
+
+<div class="modal-overlay" id="vpModal">
+<div class="modal">
+  <h3 id="vpModalTitle">VP Plan Task</h3>
+  <div class="form-row"><div class="form-label">Task Name</div><input class="form-input" id="vpName"></div>
+  <div class="form-row"><div class="form-label">Section</div>
+    <select class="form-select" id="vpSection">
+      <option>Q1</option><option>Q2</option><option>Q3</option><option>Q4+</option><option>Ideas</option><option>Completed</option>
+    </select>
+  </div>
+  <div class="form-row"><div class="form-label">Status</div>
+    <select class="form-select" id="vpStatus">
+      <option>Not Started</option><option>In Progress</option><option>Waiting</option><option>Deferred</option><option>Done</option>
+    </select>
+  </div>
+  <div class="form-row"><div class="form-label">Due Date</div><input type="date" class="form-input" id="vpDue"></div>
+  <div class="form-row"><div class="form-label">Notes</div><textarea class="form-textarea" id="vpNotes"></textarea></div>
+  <div class="modal-btns">
+    <button class="btn-delete" id="vpDeleteBtn" onclick="deleteVp()">Delete</button>
+    <button class="btn-cancel" onclick="closeModal('vpModal')">Cancel</button>
+    <button class="btn-primary" onclick="saveVp()">Save</button>
+  </div>
+</div>
+</div>
+
+<script>
+// === EMBEDDED DATA - your tasks and VP Plan from backup ===
+const SEED_TASKS = [{"id": "t1778506495350", "title": "Book travel for first week July", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-06-10"}, {"id": "t17781586359670.21311899685760183", "title": "Read CorralData Q1 2026 Aesthetics Benchmark (FYI)", "detail": "Tyler forwarded CorralData's Q1 2026 industry benchmark report as an FYI; flagged for your review.", "from": "Tyler Weinberg", "priority": "normal", "source": "outlook", "emailKey": "TylerWeinberg+Q1BenchmarkFYI"}, {"id": "t17781586359670.14273109780930537", "title": "Expect Nancy Pagan outreach for new Maryland practices", "detail": "Nancy will reach out tomorrow to help onboard the new Aesthetic Artistry Laser Centers locations in Maryland.", "from": "Nancy Pagan (Biote)", "priority": "normal", "source": "outlook", "emailKey": "NancyPagan+NewAvivaPracticesMD"}, {"id": "t17781586359670.274024133385406", "title": "Schedule monthly KPI sync with Sam & Alison", "detail": "Sam is out this week and asked to plan early next week to align on April numbers and monthly KPI submissions.", "from": "Sam Olson", "priority": "normal", "source": "outlook", "emailKey": "SamOlson+MonthlyKPIs", "due": "2026-05-10"}, {"id": "t17781586359670.35967886658950576", "title": "Confirm Tuesday inventory analysis call with Illume", "detail": "Ben and Jen want to jump on a call (you proposed next Tuesday) to walk through inventory categorization, overstock items, and Botox count.", "from": "Ben Chew / Jennifer Bullock", "priority": "high", "source": "outlook", "emailKey": "BenChewJenBullock+InventoryAnalysis"}, {"id": "t17781586359670.013838050282368841", "title": "Review loyalty points accrual sheet for iAesthetic", "detail": "Sachin is following up to confirm next steps on removing unredeemed incorrect loyalty points after you review the shared accrual sheet.", "from": "Sachin from Zenoti", "priority": "high", "source": "outlook", "emailKey": "SachinZenoti+LoyaltyPoints"}, {"id": "t17781586359670.6952883491664534", "title": "Reschedule Manager pay / KPI call with Erin", "detail": "Erin needed to cancel Wednesday's call due to a family emergency and is waiting for new times to discuss Em's pay and KPI restructuring before Liv starts in July.", "from": "Erin Lucie", "priority": "high", "source": "outlook", "emailKey": "ErinLucie+ManagerPayReschedule"}, {"id": "t17781586359670.5748249371807541", "title": "Review and approve Muse Med Spa LOI", "detail": "Tyler sent the Muse Med Spa (Austin, TX) LOI and valuation analysis for your approval.", "from": "Tyler Weinberg", "priority": "urgent", "source": "outlook", "emailKey": "TylerWeinberg+MuseMedSpaLOI"}, {"id": "t17781586359670.2214041471049134", "title": "Schedule Skytale x Chrome kickoff & sign NDA/BAA/ACH DocuSigns", "detail": "Skytale sent the countersigned engagement letter and is awaiting your kickoff meeting times plus signed NDA, BAA, and ACH DocuSigns to start the Zenoti transition.", "from": "Annie Hockey", "priority": "urgent", "source": "outlook", "emailKey": "AnnieHockey+SkytaleChromeKickoff"}, {"id": "t1777653434637", "title": "Need to add cherry to the website", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-05-01"}, {"id": "t1777650709035", "title": "Pull inventory on hand and analyze for Illume", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-05-02"}, {"id": "t1777063051679", "title": "build accelerator deck and flesh out details", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-25"}, {"id": "t1777042004050", "title": "connect Loreliz to Page for medvelle support", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-05-01"}, {"id": "t1777041976150", "title": "explore potential of better malpractice rates for partners", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-05-30"}, {"id": "t1777041952684", "title": "Create interview questions and interview cadence for Chrome", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-04-25"}, {"id": "t1777041933434", "title": "Create social media JD for clinic director and send to Barb", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-04-25"}, {"id": "t1777041058784", "title": "review Tyler's PURE inventory analysis - Teams Chat", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-24"}, {"id": "t1776978404511", "title": "develop JD for Regional Field Leader", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-30"}, {"id": "t1776716208562", "title": "email TRC group back about next steps", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-25"}, {"id": "t1776715962181", "title": "pull service/product list for each location and have claude map, start with zenoti first", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-25"}, {"id": "m1776710599597", "due": "2026-04-20", "from": "Mobile", "title": "Test", "detail": "Added on iPhone", "source": "mobile", "priority": "normal"}, {"id": "t1776446266503", "title": "ping alison is haven't gotten KPIs", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-22"}, {"id": "t1776445276655", "title": "customer retention metrics into Corral", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-20"}, {"id": "t1776444958813", "title": "Test task", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": null}, {"id": "t1776444668137", "title": "add completed appointments by provider in a quarterly view to the weekly dashboard", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": null}, {"id": "t1776444618605", "title": "add completed appointments by provider in a quarterly view to the weekly dashboard in Corral", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-25"}, {"id": "t1776437178798", "title": "begin to study transaction preparedness - Omer/Zach", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-25"}, {"id": "t1776437031832", "title": "text jordan to check in", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-30"}, {"id": "t1776436912656", "title": "speak with suzanne and jen about experience with TRC", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-04-10"}, {"id": "t1776436900250", "title": "get scheduled for Miami S4 summit", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-06-30"}, {"id": "t1776436830417", "title": "Add status network updates to the newsletter", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-04-10"}, {"id": "t1776271719145", "title": "change membership percentages", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-04-10"}, {"id": "t1776265130769", "title": "PURA/Aura  for the Liine pilot", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-04-10"}, {"id": "t1776264527472", "title": "reach out to alex /corral to see if he will share his lead list", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-04-10"}, {"id": "t1776263736360", "title": "create initial agenda for aviva accelerator program - repeatable - share with audrey", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-04-10"}, {"id": "t1776262369428", "title": "tweak rocks to be more specific", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-15"}, {"id": "t1776198485616", "title": "get youthtopia 2025 financials", "detail": "only goes through july 2025", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-15"}, {"id": "t1776198123780", "title": "get luminate 2025 financials", "detail": "due diligence only has through July in 2025", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-15"}, {"id": "t1776186388874", "title": "get full 2025 p&l for Chrome", "detail": "only goes through sep", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-15"}, {"id": "t1776186199810", "title": "build out working group project in claude", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-15"}, {"id": "t1776185741846", "title": "email Tracy all the current locations", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-15"}, {"id": "t1776185724065", "title": "build out P&L project in claude", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-15"}, {"id": "m1776165606367", "due": "2026-04-14", "from": "Mobile", "title": "Email Tracy", "detail": "Added on iPhone", "source": "mobile", "priority": "high"}, {"id": "t1776089823441", "title": "get collective shared with Page first to test", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-04-15"}, {"id": "t1776089802091", "title": "schedule membership workshop", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-04-15"}, {"id": "t1776089793224", "title": "schedule May travel", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-04-15"}, {"id": "t1776089778575", "title": "Execute KPI pull", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-04-15"}, {"id": "t17760897115910.9028780571407398", "title": "Review weekly marketing campaign performance", "detail": "Weekly Square Marketing Summary for Apr 6, 2026 shows campaign stats (2,192 recipients, 52.55% open rate, $95,958 attributable sales) and prompts setting up an automated birthday campaign.", "from": "Square Marketing", "priority": "normal", "source": "outlook", "emailKey": "squaremarketing-weekly-summary-apr6"}, {"id": "t17760897115910.19187264765379197", "title": "Confirm Pura Vida Zenoti Opportunities setup is resolved", "detail": "Nathalie replied to Amy Soule's question about Zenoti Opportunities workflow and told her to test whether they self-populate; follow up to confirm Amy and the front desk are unblocked.", "from": "Nathalie Futrell (sent, re: Amy Soule / Pura Vida)", "priority": "normal", "source": "outlook", "emailKey": "puravidaspa-amy-zenoti-opportunities"}, {"id": "t17760897115910.1323013012861084", "title": "Follow up on Renew Medspa Zenoti $6K quote dispute", "detail": "Nathalie forwarded the escalated Zenoti service-creation pricing dispute to Melody; Zenoti's Nawal Arora promised to review pricing flexibility with leadership, and a response is still pending.", "from": "Nathalie Futrell (sent, re: Nawal Arora / Zenoti thread)", "priority": "urgent", "source": "outlook", "emailKey": "zenoti-renew-medspa-6k-quote"}, {"id": "m1775927896532", "due": "2026-04-14", "from": "Mobile", "title": "Follow up chrome mesvelle onboarding", "detail": "Added on iPhone", "source": "mobile", "priority": "normal"}, {"id": "m1775668160442", "due": "", "from": "Mobile", "title": "Amber - do we have operational best practices for what to do to go live?", "detail": "Added on iPhone", "source": "mobile", "priority": "high"}, {"id": "t1775504093117", "title": "send follow up to Em about utilization reporting solve", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-30"}, {"id": "t1775504071801", "title": "Dig into Patient Now tasking", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-30"}, {"id": "t1775504054250", "title": "schedule July/August visit to Luminate to coach Liv", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-05-15"}, {"id": "t1775499950906", "title": "finish re-cap todos from luminate trip", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-06"}, {"id": "t1775493489555", "title": "research ConnectTeam for best practice", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-30"}, {"id": "t1775492994240", "title": "Add customer retention to KPIs", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-30"}, {"id": "t17751412326310.8115237020401003", "title": "Attend EncorVita Health Introduction Teams meeting at 3pm", "detail": "Microsoft Teams meeting for an EncorVita Health Introduction is scheduled for today at 3:00 PM.", "from": "Calendar reminder", "priority": "urgent", "source": "outlook", "emailKey": "calendar+encorVita-health-introduction-3pm"}, {"id": "t17751412326310.5925893440751399", "title": "Confirm Friday 1pm lunch with Amy Murdoch (Revision Skincare)", "detail": "Lunch with Amy and team is set for Friday at 1pm at Cipriani's at AmSpa Vegas — no explicit confirmation sent yet in the thread.", "from": "Amy Murdoch (Revision Skincare)", "priority": "normal", "source": "outlook", "emailKey": "amy-murdoch-revision+quick-connect"}, {"id": "t17751412326310.12419689618744734", "title": "Send Zenoti texting data to Tyler Weinberg", "detail": "Nathalie told Tyler she has texting data to share but needs to clean it up first before sending — proposal for the Zenoti standard package expected in 1–2 weeks.", "from": "Tyler Weinberg", "priority": "high", "source": "outlook", "emailKey": "tyler-weinberg+avivas-zenoti-standard-package"}, {"id": "t17751412326310.3185541901742909", "title": "Coordinate in-person visit to Persona Med Spa with Stan & Kathi Jones", "detail": "Stan and Kathi Jones want to meet Nathalie in person; Nathalie proposed 4/6, 4/13, or 4/20–4/21 — awaiting their reply to confirm the date.", "from": "Audrey Neff", "priority": "high", "source": "outlook", "emailKey": "audrey-neff+great-to-meet-you-persona-medspa", "due": "2026-04-25"}, {"id": "t17751412326310.9902865640314125", "title": "Confirm Aviva KPI definitions with Zach Katsulis", "detail": "Zach needs confirmation on whether 'Average Invoice Value' from Zenoti should be mirrored as-is in Corral, and the team needs to finalize the sales-per-hour metric definition.", "from": "Zachary Katsulis (DuneGlass Capital)", "priority": "high", "source": "outlook", "emailKey": "zach-katsulis-duneglass+aviva-kpis-definition"}, {"id": "t17751412326310.4472632663182726", "title": "Send Cellese press release & order form to partners", "detail": "Partnership launch announced today — Nathalie committed to distributing the press release, order form, and BDM list to Aviva's individual partner locations.", "from": "Ruthie Ivester (Cellese)", "priority": "urgent", "source": "outlook", "emailKey": "ruthie-ivester-cellese+excited-upcoming-launch"}, {"id": "t17751412326310.7573835783922875", "title": "Resolve Aviva Zenoti employee profile setup at Renew Med Spa", "detail": "Zenoti support says they cannot make changes from their end; someone needs to create the Aviva employee profile in the system with a financial/admin role (not provider).", "from": "Anuhya from Zenoti", "priority": "urgent", "source": "outlook", "emailKey": "anuhya-zenoti+aviva-log-in"}, {"id": "t17751412326310.15953602076531193", "title": "Confirm Allergan meeting time at AmSpa", "detail": "Brent Foster has availability at 9 or 10AM Saturday at AmSpa — need to reply confirming which time works for the Aviva team.", "from": "Michelle Hinds (Allergan)", "priority": "urgent", "source": "outlook", "emailKey": "hinds-allergan+time-to-meet-medspa-show"}, {"id": "t1775140649417", "title": "EOS - Membership changes 40/15%,", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-02"}, {"id": "t1774979110117", "title": "change membership sales revenue to 40% - fees to 15%", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-02"}, {"id": "t1774967945268", "title": "Add change management document to the HUB", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-06"}, {"id": "t1774967079824", "title": "send Tyler Zenoti texting information", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-03-31"}, {"id": "t1774966805659", "title": "Send AnteAge partnership announcement", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-04"}, {"id": "t1774966768159", "title": "spend time in PURE Medvelle reporting", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-02"}, {"id": "t1774966752726", "title": "read traction notes", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-02"}, {"id": "m1774962575686", "due": "2026-03-31", "from": "Mobile", "title": "Share quicksilver discount with the team", "detail": "Added on iPhone", "source": "mobile", "priority": "urgent"}, {"id": "g_aa_4", "title": "Consider withdrawal provision language with board input", "source": "granola", "priority": "high"}, {"id": "g_aa_3", "title": "Upload remaining due diligence documents to data room", "source": "granola", "priority": "urgent"}, {"id": "g_barb_3", "title": "Provide laundry vendor info and cannula list to Medvelle", "source": "granola", "priority": "high"}, {"id": "g_zen_3", "title": "Request process documentation added to Skytail proposal", "source": "granola", "priority": "high"}, {"id": "g_zen_2", "title": "Send Zenoti package recommendations to Zach", "source": "granola", "priority": "high"}, {"id": "g_zen_1", "title": "Email Annie for tightened Skytail proposal before Tuesday", "source": "granola", "priority": "urgent"}, {"id": "t1774631939940", "title": "Add Nitra to Hub and vendor Pricing", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-01"}, {"id": "t1774628442188", "title": "Send connection emails to Nawal and the partners that provided feedback", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-01"}, {"id": "g_med_2", "from": "Barbara Franklin: Product-Service Mapping", "title": "Medvelle to send updated mapping sheet with adjustments", "detail": "Medvelle to send updated mapping sheet with today's adjustments", "source": "granola", "priority": "normal"}, {"id": "g_med_1", "from": "Barbara Franklin: Product-Service Mapping", "title": "Schedule Medvelle training session before go-live", "detail": "Training session to be scheduled before Medvelle go-live", "source": "granola", "priority": "normal"}, {"id": "g_sync_2", "from": "Tyler/Nathalie Sync", "title": "Add quarterly P&L view to dashboard — create executive summary view", "detail": "Nathalie to add quarterly P&L view and executive summary to dashboard", "source": "granola", "priority": "normal"}, {"id": "g_sync_1", "from": "Tyler/Nathalie Sync", "title": "Survey existing partners for vendor contact preferences", "detail": "Nathalie to survey existing partners", "source": "granola", "priority": "normal"}, {"id": "g_barb_2", "from": "Barb & Nathalie", "title": "Follow up on Marissa partnership agreement", "detail": "Nathalie to follow up on Marissa's partnership agreement", "source": "granola", "priority": "high"}, {"id": "g_barb_1", "from": "Barb & Nathalie", "title": "Send Barb additional JDs — esthetician, front desk, injector", "detail": "Nathalie to send additional job descriptions to Barbara", "source": "granola", "priority": "high"}, {"id": "g_aa_2", "from": "Aesthetic Artistry Call", "title": "Morgan to upload remaining due diligence docs to data room", "detail": "Aesthetic Artistry — Morgan to upload remaining due diligence documents", "source": "granola", "priority": "high"}, {"id": "g_aa_1", "from": "Aesthetic Artistry Call", "title": "Get red-lined agreement comments from Barbara by Friday/Monday", "detail": "Aesthetic Artistry — Barbara to deliver red-lined agreement comments", "source": "granola", "priority": "high"}, {"id": "g_l10_5", "from": "Level 10 Meeting", "title": "Formalize partner check-in call cadence process (Q2 rock)", "detail": "Q2 rock commitment from Level 10 meeting", "source": "granola", "priority": "high"}, {"id": "g_l10_4", "from": "Level 10 Meeting", "title": "Start transitioning Leslie to Paylocity once written agreement is in", "detail": "From Level 10 — once Tyler gets written agreement", "source": "granola", "priority": "high"}, {"id": "g_ops_2", "from": "Ops Sync", "title": "Get on a call to set expectations with Julie", "detail": "From Ops Sync — 'Can we get on a call and set some expectations with Julie?'", "source": "granola", "priority": "high"}, {"id": "g_ops_1", "from": "Ops Sync", "title": "Text Jessica to confirm next Tuesday call", "detail": "From Ops Sync — 'Can you text Jessica to confirm next Tuesday? I do not have her cell'", "source": "granola", "priority": "urgent"}, {"id": "g_l10_3", "from": "Level 10 Meeting", "title": "Update Tyler on Galderma contract status with Kevin", "detail": "From Level 10 EOS meeting March 27", "source": "granola", "priority": "urgent"}, {"id": "g_l10_2", "from": "Level 10 Meeting", "title": "Contact Zenoti to connect Julie from Renew for access setup", "detail": "Contact Zenoti customer service rep to directly connect Julie from Renew for access setup", "source": "granola", "priority": "urgent"}, {"id": "g_l10_1", "from": "Level 10 Meeting", "title": "Share 2025 Aviva financials with Emily", "detail": "From Level 10 EOS meeting March 27", "source": "granola", "priority": "urgent"}, {"id": "t17746203826390.9625952780944422", "title": "Add data to CorralData Executive Summary board", "detail": "The CorralData Executive Summary board is empty with no data widgets, so the daily snapshot contains no insights; action needed to populate the board with data or charts.", "from": "CorralData Reporting", "priority": "normal", "source": "outlook", "emailKey": "corraldata+executive-summary-empty-board"}, {"id": "t17746203826390.9876977779835823", "title": "Submit 3 draft expense reimbursements in Ramp", "detail": "Three draft reimbursements need to be completed: $268 at United (Mar 25), $137.76 at Southwest Airlines (Mar 25), and $401.56 at Southwest Airlines (Mar 25).", "from": "Ramp", "priority": "high", "source": "outlook", "emailKey": "ramp+weekly-digest-3-reimbursements"}, {"id": "t17746203826390.601125912442024", "title": "KPI Logic Validation", "detail": "Asana task due Mar 31: validate KPI logic for the business.", "from": "Asana", "priority": "high", "source": "outlook", "emailKey": "asana+kpi-logic-validation-mar31"}, {"id": "t17746203826390.08740295793449426", "title": "Figure out how to build a treatment plan", "detail": "Asana task due Mar 31: determine the process or framework for building a treatment plan.", "from": "Asana", "priority": "normal", "source": "outlook", "emailKey": "asana+treatment-plan-mar31"}, {"id": "t17746203826390.8667130644554689", "title": "Leadership classes for Office Managers", "detail": "Asana task due Mar 31: organize or deliver leadership classes for Office Managers.", "from": "Asana", "priority": "normal", "source": "outlook", "emailKey": "asana+leadership-classes-mar31"}, {"id": "t17746203826390.93181268049691", "title": "Build out and launch V1 Aviva Partner Hub", "detail": "Asana task due Mar 31: build and launch the first version of the Aviva Partner Hub.", "from": "Asana", "priority": "high", "source": "outlook", "emailKey": "asana+aviva-partner-hub-mar31"}, {"id": "t17746203826390.9540589888433271", "title": "Medvelle Pilot", "detail": "Asana task due Mar 31: advance or complete the Medvelle pilot initiative.", "from": "Asana", "priority": "high", "source": "outlook", "emailKey": "asana+medvelle-pilot-mar31"}, {"id": "t17746203826390.594962964277033", "title": "Visit all sites to build relationships with owners/staff", "detail": "Asana task due Mar 31: complete site visits to build relationships with practice owners and staff.", "from": "Asana", "priority": "high", "source": "outlook", "emailKey": "asana+site-visits-mar31"}, {"id": "t17746203826390.5231405276195037", "title": "Create change management document for practices (Medvelle, Zenoti, etc.)", "detail": "Asana task due Mar 30: draft a document explaining upcoming changes (Medvelle, Zenoti, etc.) and their day-to-day impact for practice staff.", "from": "Asana", "priority": "urgent", "source": "outlook", "emailKey": "asana+change-management-doc-mar30"}, {"id": "t17746203826390.877196058016557", "title": "RSVP / plan stop at Decoda Health AmSpa cocktail event", "detail": "Decoda Health CEO invited you to a cocktail gathering at AmSpa on Saturday; you and Audrey agreed it may be worth dropping by to learn about their medspa AI platform for Zenoti improvement ideas.", "from": "Daniyal Afzal (via Audrey Neff thread)", "priority": "high", "source": "outlook", "emailKey": "audrey-neff+amspa-decoda-rsvp"}, {"id": "m1774553947916", "due": "", "from": "Mobile", "title": "Add employee kpi derp dive to chrome list", "detail": "Added on iPhone", "source": "mobile", "priority": "normal"}, {"id": "t17745359136420.6774691941302297", "title": "File/save Anthropic receipt", "detail": "Receipt #2148-2777-1700 for $21.32 (prepaid extra usage, Individual plan) was forwarded to the work inbox — may need to be filed or expensed.", "from": "Nathalie Futrell (forwarded from Anthropic)", "priority": "normal", "source": "outlook", "emailKey": "anthropic-receipt-2148-2777-1700"}, {"id": "t17745359136420.26000280684153887", "title": "Chrome / Skytale ask", "detail": "Judy's OOO auto-reply noted she'd be back in the office on March 26 — she may be waiting for a response related to the Aviva Aesthetics x Skytale engagement.", "from": "Judy Kozlicki (Skytale)", "priority": "urgent", "source": "outlook", "emailKey": "judy-kozlicki-skytale-ooo-return", "due": "2026-04-02"}, {"id": "t17745359136420.08431877988513958", "title": "Complete overdue Asana tasks (7 due soon)", "detail": "Daily digest lists 7 tasks due by March 30–31, including change management document, site visits, Medvelle Pilot, Aviva Partner Hub V1, Leadership classes, treatment plan build, and KPI Logic Validation.", "from": "Asana", "priority": "urgent", "source": "outlook", "emailKey": "asana-tasks-due-soon-march31"}, {"id": "t17745359136420.1998084419365238", "title": "Reactivate or decide on Asana subscription", "detail": "Asana sent a (flagged as unverified) cancellation notice saying the plan has been canceled and will remain active until April 21, 2026 — action needed to reactivate or confirm cancellation.", "from": "Asana, Inc.", "priority": "high", "source": "outlook", "emailKey": "asana-subscription-canceled"}, {"id": "t17745359136420.7913553171364299", "title": "Review Chrome Aesthetics 2025 Report spreadsheet", "detail": "Barbara shared the Chrome Aesthetics 2025 Report as an Excel file on Google Sheets for review, following Nathalie's earlier request for an Excel/CSV version.", "from": "Barbara Franklin", "priority": "high", "source": "outlook", "emailKey": "barbara-franklin-chrome-aesthetics-report", "due": "2026-04-01"}, {"id": "t17745359136420.5221098964255683", "title": "Confirm receipt and next steps for Cross-Platform Ops Council", "detail": "Kevin replied to Ryan Graham's Ops Council launch email saying 'let me know the next steps' — a response or follow-up to organize the first monthly meeting may be needed.", "from": "Kevin Dore (Phase 1 Equity)", "priority": "high", "source": "outlook", "emailKey": "kevin-dore-cross-platform-ops-council"}, {"id": "t17745359136420.24575583997361572", "title": "Provide outstanding items for Zenoti proposal", "detail": "Annie sent an updated Zenoti/Skytale proposal and needs Nathalie to supply 5 specific items ASAP: complete product list (re-send), full service list with pricing/duration, membership types and billing rules, count of service forms, and online booking portal preferences.", "from": "Annie Hockey (Skytale)", "priority": "urgent", "source": "outlook", "emailKey": "annie-hockey-aviva-skytale-zenoti", "due": "2026-04-03"}, {"id": "g10", "from": "Galderma Q2 Promos", "title": "Connect with Brian via email for AMSPA coordination", "detail": "Kevin to connect Aviva team with Brian for AMSPA — April 9-8 conference", "source": "granola", "priority": "normal"}, {"id": "g9", "from": "Monthly Financial Review", "title": "Emily to send 2025 financials PDF to board members", "detail": "Monthly Financial Review — Emily to complete Sage crosswalk mapping due next week", "source": "granola", "priority": "normal"}, {"id": "g8", "from": "Biote Review", "title": "Biote warm handoff with new regional manager Lauren — end of April", "detail": "New regional manager Lauren — warm handoff meeting planned end of April with Tyler, Nathalie, Mark, Lauren", "source": "granola", "priority": "normal"}, {"id": "g7", "from": "Ariessence Partnership", "title": "Provide Ariessence account list with NPI or state license numbers", "detail": "Steven to send pricing sheet — Nathalie to provide account list with NPI numbers", "source": "granola", "priority": "normal"}, {"id": "g6", "from": "Pura Vida Touch Base", "title": "Continue Pura Vida opportunity system testing before April 1st", "detail": "Zenoti opportunity system testing to be validated before April 1st rollout", "source": "granola", "priority": "high"}, {"id": "g5", "from": "Pura Vida Touch Base", "title": "Provide Pura Vida realistic revenue target", "detail": "Amy to send Jan/Feb draft financials — Nathalie to provide revenue target quickly", "source": "granola", "priority": "high"}, {"id": "g4", "from": "Aesthetic Artistry Check-in", "title": "Get Aesthetic Artistry red-lined agreement comments by Friday", "detail": "Barbara to deliver red-lined agreement comments by Friday or Monday", "source": "granola", "priority": "high"}, {"id": "g3", "from": "Galderma Q2 Promos", "title": "Kevin to provide Enterprise Aspire account access — biggest account first", "detail": "Galderma Q2 — Kevin to provide Enterprise Aspire access starting with biggest account", "source": "granola", "priority": "high", "due": "2026-04-30"}, {"id": "g2", "from": "Nitra Healthcare", "title": "Review Nitra vs Ramp with internal team before Friday call", "detail": "Nitra Healthcare follow-up call Friday March 27th 11am Central — include Tyler and controller", "source": "granola", "priority": "urgent"}, {"id": "g1", "from": "Galderma Q2 Promos", "title": "Follow up on Galderma Q4 2025 rebate processing", "detail": "Kevin to follow up on Q4 2025 rebate processing — potentially today", "source": "granola", "priority": "urgent"}, {"id": "m1773953711591", "due": "2026-03-19", "from": "Mobile", "title": "Test", "detail": "Added on iPhone", "source": "mobile", "priority": "normal"}, {"id": "m1774189251823", "due": "2026-03-23", "from": "Mobile", "title": "Finish zenoti package selections", "detail": "Added on iPhone", "source": "mobile", "priority": "high"}, {"id": "m1774464083028", "due": "2026-03-26", "from": "Mobile", "title": "Book car for New Mexico", "detail": "Added on iPhone", "source": "mobile", "priority": "normal"}, {"id": "t1774447844549", "title": "Redeem $250 Nitra reward", "detail": "Nitra sent a $250 USD gift card reward (ID: LDYPZUT207PY) that expires March 26, 2027.", "from": "Nitra via Tremendous", "priority": "normal", "source": "outlook"}, {"id": "t1774017100696", "title": "Once Zenoti packages are final, send to Jennifer for pricing quote", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-03-26"}, {"id": "t1774017100695", "title": "Send AnteAge partnership email", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-03"}, {"id": "t1774017100694", "title": "Schedule next partner call", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-06"}, {"id": "t1774017100693", "title": "Check BioTe numbers", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-06-01"}, {"id": "t1774017100690", "title": "Await and distribute AnteAGE marketing materials", "detail": "Ruthie is coordinating marketing materials — distribute to AVIVA teams as part of AnteAGE partnership announcement.", "from": "Ruthie Ivester", "priority": "normal", "source": "outlook"}, {"id": "t1773954885681", "title": "Explore buy now pay later options", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": null}, {"id": "t1773953014297", "title": "Need to add membership retention to the master KPIs to track", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-25"}, {"id": "t1773953014294", "title": "Follow up on Zenoti action items (Aviva package & CSM calls)", "detail": "Zenoti sent meeting minutes with open Aviva action items.", "from": "Anant Srivastava", "priority": "normal", "source": "outlook"}, {"id": "t004", "title": "Schedule reminders for KPI pulls", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-26"}, {"id": "t007", "title": "Complete goals in dashboard and send to Team", "detail": "Added manually", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-25"}, {"id": "t008", "title": "Need to have big rocks for Q2 for EOS meeting", "detail": "KPI Dashboard/Corral\nPartner Check Ins\nZenoti\nOnboarding Playbook", "from": "You", "priority": "urgent", "source": "manual", "due": "2026-03-26"}, {"id": "t009", "title": "Build out dashboard in Corral", "detail": "Added manually", "from": "You", "priority": "high", "source": "manual", "due": "2026-04-26"}, {"id": "t014", "title": "Change Allergan/Galderma pricing based on new agreement", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t016", "title": "Add Quicksilver to the Hub", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t017", "title": "Add AnteAge to the Hub", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t018", "title": "Add PRX to the Hub", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t019", "title": "Send Suzanne the facial analysis tools for the website", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual"}, {"id": "t020", "title": "Respond to Mike/Paylocity email", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-25"}, {"id": "t024", "title": "Respond to EntityMed intro — schedule exploratory call", "detail": "Loreliz introduced Heather from EntityMed for an exploratory conversation", "from": "Loreliz", "priority": "normal", "source": "outlook"}, {"id": "t1773954885682", "title": "Get details for FIGS store set up", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-05-08"}, {"id": "t1774017100687", "title": "Follow up KPI input if not completed - AURA", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-03-31"}, {"id": "t1773954885683", "title": "Share back learnings from Zenoti list to board members", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-30"}, {"id": "t1774276329551", "title": "Send Barb JD, front desk, aesthetician, nurse provider", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-10"}, {"id": "t1774017100688", "title": "Check survey results again", "detail": "Added manually", "from": "You", "priority": "normal", "source": "manual", "due": "2026-04-10"}];
+const SEED_DONE = ["t1773953014290", "t011", "t1773953014296", "t1773954885679", "t1773954885677", "t015", "t006", "t1774017100692", "t1774017100689", "t1773954885678", "t1773953014298", "t1773953014293", "t1773953014291", "t010", "t1774017100691", "t1773954885680", "t1773953014295", "t013", "t021", "t022", "t023", "t003", "t005", "t012", "t002", "t001", "t1774447844550", "t1774447844551", "m1773953711591", "m1774189251823", "t007", "t020", "t1774017100696", "t1774017100695", "t1774276329551", "t1774017100688", "t17745359136420.6774691941302297", "t17745359136420.08431877988513958", "t17745359136420.1998084419365238", "t17745359136420.5221098964255683", "g10", "g9", "g8", "g7", "g6", "g5", "g4", "g2", "g1", "t1774017100690", "m1774464083028", "t17745359136420.26000280684153887", "t17745359136420.7913553171364299", "t17746203826390.9876977779835823", "t17746203826390.601125912442024", "t17746203826390.9540589888433271", "t17746203826390.594962964277033", "t17746203826390.5231405276195037", "t1774447844549", "t024", "m1774553947916", "t019", "g_barb_2", "g_barb_1", "g_aa_2", "g_aa_1", "g_l10_5", "g_ops_2", "g_med_2", "g_med_1", "g_sync_2", "g_sync_1", "g_l10_3", "g_l10_2", "g_l10_1", "t17746203826390.9625952780944422", "t17746203826390.877196058016557", "t1773953014294", "g_zen_2", "g_barb_3", "g_aa_4", "g_zen_1", "t1773954885683", "g_zen_3", "t008", "t004", "t1774967945268", "g_aa_3", "g_ops_1", "t17746203826390.08740295793449426", "m1774962575686", "t17751412326310.8115237020401003", "t17751412326310.9902865640314125", "t17751412326310.4472632663182726", "t17751412326310.7573835783922875", "t17751412326310.15953602076531193", "t1774967079824", "t1774628442188", "t17745359136420.24575583997361572", "t1774017100687", "t1774966805659", "t1775499950906", "m1775927896532", "t17751412326310.5925893440751399", "t17751412326310.12419689618744734", "t17746203826390.8667130644554689", "t17760897115910.9028780571407398", "t17760897115910.19187264765379197", "t17760897115910.1323013012861084", "t017", "t018", "t014", "t016", "t1774966768159", "m1776165606367", "t1775140649417", "t1774979110117", "t1776264527472", "t1774631939940", "t1776185741846", "t1776185724065", "t1776089823441", "t1775504093117", "m1775668160442", "t17746203826390.93181268049691", "t1773954885681", "g_l10_4", "t1776444958813", "t1776444668137", "t1776271719145", "t1776089793224", "t1776089802091", "t1776446266503", "t1776437031832", "m1776710599597", "t1776436830417", "t1776265130769", "t1776263736360", "t1776262369428", "t1776089778575", "t1777041933434", "t1776716208562", "t1775504071801", "t1773954885682", "t1777041952684", "t1774966752726", "t1776198485616", "t1776198123780", "t1776186388874", "t1776444618605", "t1776186199810", "t1777063051679", "t17751412326310.3185541901742909", "t009", "t1777650709035", "t1777042004050", "t17781586359670.013838050282368841", "t17781586359670.6952883491664534", "t17781586359670.14273109780930537", "t17781586359670.5748249371807541", "t17781586359670.2214041471049134", "t1777653434637", "t1775492994240", "t1774017100694", "t1776445276655", "t1776437178798", "t1776978404511", "t17781586359670.21311899685760183", "t1777041058784", "t17781586359670.274024133385406", "t1777041976150"];
+const SEED_VP = [{"id": "vp1", "section": "Completed", "name": "Zenoti", "status": "Done", "due": "2026-06-01", "notes": ""}, {"id": "vp2", "section": "Q1", "name": "Visit all sites to build relationships with owners/staff", "status": "In Progress", "due": "2026-03-31", "notes": ""}, {"id": "vp3", "section": "Q1", "name": "Medvelle Pilot", "status": "In Progress", "due": "2026-03-31", "notes": "IAesthetic\nPure Regenerative\nAura Aesthetics"}, {"id": "vp4", "section": "Q2", "name": "Standardize operational reporting cadence across clinics", "status": "In Progress", "due": "2026-06-30", "notes": "Weekly dashboards\nMonthly KPI reviews"}, {"id": "vp5", "section": "Completed", "name": "ID scalable systems that could be interesting", "status": "Done", "due": "2026-06-30", "notes": ""}, {"id": "vp6", "section": "Completed", "name": "Learn how to use EMR platforms and assist clinics in solving efficiently", "status": "Done", "due": "2026-06-30", "notes": ""}, {"id": "vp7", "section": "Completed", "name": "Develop Best Practice Playbook", "status": "Done", "due": "2026-06-30", "notes": ""}, {"id": "vp8", "section": "Q2", "name": "KPI dashboards in Corral", "status": "In Progress", "due": null, "notes": ""}, {"id": "vp9", "section": "Completed", "name": "Build out and launch V1 Aviva Partner Hub", "status": "Done", "due": "2026-03-31", "notes": ""}, {"id": "vp10", "section": "Q3", "name": "Deliver KPI improvements at network level", "status": "In Progress", "due": "2026-12-31", "notes": ""}, {"id": "vp11", "section": "Q3", "name": "Launch Liine pilot", "status": "In Progress", "due": null, "notes": ""}, {"id": "vp12", "section": "Completed", "name": "Launch partner newsletter", "status": "Done", "due": null, "notes": ""}, {"id": "vp13", "section": "Q3", "name": "Sales training build out", "status": "Not Started", "due": null, "notes": ""}, {"id": "vp14", "section": "Q2", "name": "Membership best practices", "status": "In Progress", "due": null, "notes": ""}, {"id": "vp15", "section": "Q4+", "name": "Patient service training", "status": "Not Started", "due": null, "notes": ""}, {"id": "vp16", "section": "Q4+", "name": "SOP creation", "status": "Not Started", "due": null, "notes": ""}, {"id": "vp17", "section": "Q4+", "name": "Aviva Leadership Academy", "status": "In Progress", "due": null, "notes": ""}, {"id": "vp18", "section": "Q4+", "name": "Skincare consolidation", "status": "In Progress", "due": null, "notes": "Alastin, SkinMedica, Revision, SkinBetter Science, Noon Aesthetics"}, {"id": "vp19", "section": "Q4+", "name": "Codify SOPs for clinics operations, patient journey, inventory & staff training", "status": "Not Started", "due": "2026-12-31", "notes": ""}, {"id": "vp20", "section": "Ideas", "name": "ROI on all services to create a BP ranking", "status": "Not Started", "due": null, "notes": ""}, {"id": "vp21", "section": "Completed", "name": "Monthly/quarterly newsletter", "status": "Done", "due": null, "notes": "Cherry through Allergan charges zero fees. Zenoti savings. Medvelle improvements. New vendor deals."}, {"id": "vp22", "section": "Ideas", "name": "Leadership classes for Office Managers", "status": "Not Started", "due": "2026-03-31", "notes": ""}, {"id": "vp23", "section": "Ideas", "name": "Price increases each year - 2-3%", "status": "Not Started", "due": null, "notes": ""}, {"id": "vp24", "section": "Completed", "name": "Establish baseline KPIs", "status": "Done", "due": null, "notes": ""}, {"id": "vp25", "section": "Completed", "name": "Build out onboarding roadmap for new practices", "status": "Done", "due": null, "notes": ""}, {"id": "vp26", "section": "Completed", "name": "Formalize relationships with existing practices", "status": "Done", "due": null, "notes": ""}, {"id": "vp27", "section": "Completed", "name": "Audit of each practice: staffing, scheduling, EMR, marketing, compliance, inventory", "status": "Done", "due": null, "notes": ""}, {"id": "vp28", "section": "Completed", "name": "Support Aviva partners when they join the platform", "status": "Done", "due": null, "notes": ""}, {"id": "vp29", "section": "Completed", "name": "Identify & execute 2-3 quick efficiency wins", "status": "Done", "due": null, "notes": ""}, {"id": "vp30", "section": "Completed", "name": "Build strong alignment with clinic owners - Aviva values", "status": "Done", "due": null, "notes": ""}, {"id": "vp31", "section": "Completed", "name": "Assist with vendor relationships and quarterly business reviews", "status": "Done", "due": null, "notes": ""}, {"id": "vp32", "section": "Completed", "name": "Roll out Medvelle to all locations", "status": "Done", "due": null, "notes": ""}, {"id": "vp33", "section": "Completed", "name": "Become go-to partner for owners/managers", "status": "Done", "due": null, "notes": ""}, {"id": "vp34", "section": "Completed", "name": "Lead onboarding integrations", "status": "Done", "due": null, "notes": ""}, {"id": "vp35", "section": "Completed", "name": "Formalize onboarding flow", "status": "Done", "due": null, "notes": ""}, {"id": "vp36", "section": "Completed", "name": "Create unified Master Partner Info List", "status": "Done", "due": null, "notes": ""}, {"id": "vp37", "section": "Completed", "name": "Consolidate vendor info in one place", "status": "Done", "due": null, "notes": ""}, {"id": "vp38", "section": "Completed", "name": "Monthly/quarterly call with all partners to discuss best practices", "status": "Done", "due": null, "notes": "Letybo first — general info, medical confirmation, EBITDA impact"}, {"id": "vp39", "section": "Completed", "name": "Build out pricing worksheet to share with partners", "status": "Done", "due": null, "notes": ""}, {"id": "vp40", "section": "Completed", "name": "Create quarterly value proposition showing partner savings", "status": "Done", "due": null, "notes": ""}, {"id": "vp41", "section": "Completed", "name": "Develop a ranking system for each medspa", "status": "Done", "due": null, "notes": "Front desk, sales process, marketing, inventory, workflow, technology, customer follow-up"}, {"id": "vp42", "section": "Completed", "name": "Build out and validate KPI logic for non-Zenoti locations", "status": "Done", "due": null, "notes": ""}, {"id": "vp43", "section": "Completed", "name": "PuraVida - Maple & Marriottsville", "status": "Done", "due": null, "notes": ""}, {"id": "vp44", "section": "Completed", "name": "Pure Regenerative", "status": "Done", "due": null, "notes": ""}, {"id": "vp1777643150853", "name": "Basic business calendar for flow of year", "section": "Ideas", "status": "Not Started", "due": "2026-05-31", "notes": ""}, {"id": "vp1777644186650", "name": "Feed all PURE customer data into claude to see where retention is losing", "section": "Completed", "status": "Done", "due": "2026-05-30", "notes": ""}, {"id": "vp1777644240139", "name": "Incentive progam", "section": "Ideas", "status": "Not Started", "due": "2026-06-30", "notes": "Something like medvelle with the points that will go towards a gifty thing"}, {"id": "vp1777644348576", "name": "Advanced Marketing", "section": "Ideas", "status": "Not Started", "due": "2026-06-15", "notes": "get a list of all the marketing initiatives that should be loaded in"}, {"id": "vp1777990315541", "name": "Create treatment plan template", "section": "Q3", "status": "Not Started", "due": "2026-06-01", "notes": ""}, {"id": "vp1777990381024", "name": "Leases - tracking tool", "section": "Q3", "status": "Not Started", "due": "2026-10-01", "notes": ""}, {"id": "vp1777990419941", "name": "Licensure - tracking tool", "section": "Q3", "status": "Not Started", "due": "2026-10-01", "notes": ""}, {"id": "vp1777990442124", "name": "Lockton - malpractice for locations - roll up", "section": "Q3", "status": "In Progress", "due": "2026-10-01", "notes": ""}, {"id": "vp1777990458391", "name": "equipment - tracking tool", "section": "Q3", "status": "Not Started", "due": "2026-10-01", "notes": "1. needed for financial accounting - depreciation - especially the ones that have leins on them\n2. Maintenance schedules\n3. Asset tracking"}, {"id": "vp1777990540157", "name": "Contract management - tracking tool", "section": "Q3", "status": "Not Started", "due": "2026-10-01", "notes": ""}, {"id": "vp1778080959643", "name": "KPIs - Remaining", "section": "Q2", "status": "Not Started", "due": "2026-06-30", "notes": "build remaining list of KPIs that I would like to have built out for the future"}, {"id": "vp1778157421604", "name": "Zenoti Aviva Package", "section": "Ideas", "status": "Deferred", "due": null, "notes": "Here is the recommended Aviva Package for Zenoti.\nAviva Package\n$1050 per month\nIncludes Core Zenoti, Photo Manager, Base HyperConnect (includes 2-way and transactional texting, and Reputation mgmt), Advanced Marketing, API Access and Unlimited Emails. ($1250 Value)\nHyperConnect Engage includes 10K SMS credits per location/month.\nIncludes HyperConnect Voice Upgrade, and Accounting Integration\nIncludes 2K voice minutes per location/month. \nPremium Support - dedicated TAM\nAdditional Capabilities that will fall outside of our package\nAI Scribe: $112.50 per provider/month \nePrescribe: $70/$55 - EPCS/Non EPCS\n\nA couple of additional notes - \nWe are still in process of nailing this all down including the number of texts messages per month so pricing may fluctuate somewhat.\nYou will get 50% off any additional modules that you would like to use above and beyond the ones listed as an Aviva Partner."}, {"id": "vp1778158125318", "name": "List to Add to Collective", "section": "Ideas", "status": "Not Started", "due": null, "notes": "- Zenoti treatment plan best practice"}, {"id": "vp1778257626451", "name": "RFD tools and expecations", "section": "Q3", "status": "Not Started", "due": "2026-06-30", "notes": "Visit Tools\n- claude analysis of inventory\n\nSaas\n- Claude\n- Granola\n"}, {"id": "vp1778261970451", "name": "Board Prep", "section": "Q2", "status": "Not Started", "due": "2026-05-15", "notes": "- KPIs\n- Medvelle presentation\n- PI update?\n- what did I say I was going to do, what is done\n- plans for the future"}, {"id": "vp1778525897724", "name": "Phone systems???", "section": "Ideas", "status": "Not Started", "due": null, "notes": ""}, {"id": "vp1778593403919", "name": "Malpractice roll up", "section": "Q2", "status": "In Progress", "due": "2026-06-30", "notes": "5.11.26 - reached out to Lockton via email"}, {"id": "vp1778677455646", "name": "Modify Allergan Goal sheet for Aviva", "section": "Q2", "status": "Not Started", "due": "2026-06-30", "notes": "https://www.dropbox.com/scl/fi/vwyz0awzw69wceqpddiqd/2026-Goal-Setting-Tool-Pure-Regenerative-Medicine.xlsx?rlkey=t5idta2yv6lr6t9z3ho1fd4xg&st=nqld4o1c&dl=0"}, {"id": "vp1778679855047", "name": "Finalize onboarding playbook -Claude", "section": "Q2", "status": "In Progress", "due": "2026-06-30", "notes": "pull all documents into a true formatted playbook for Claude"}, {"id": "vp1778680795327", "name": "Items for Next Newsletter", "section": "Q3", "status": "Not Started", "due": "2026-08-01", "notes": ""}, {"id": "vp1778682076250", "name": "Item Mapping Project", "section": "Q3", "status": "Not Started", "due": null, "notes": "Map all products and services for all locations not on Zenoti currently."}];
+
+// Storage key (separate from old broken one so we get fresh start)
+const STORAGE_KEY = 'aviva_cc_clean';
+
+let tasks = [];
+let doneIds = new Set();
+let vp = [];
+let curFilter = 'all';
+let curSort = 'priority';
+let editId = null;
+let editVpId = null;
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      tasks = d.tasks || SEED_TASKS;
+      doneIds = new Set(d.doneIds || SEED_DONE);
+      vp = d.vp || SEED_VP;
+    } else {
+      tasks = JSON.parse(JSON.stringify(SEED_TASKS));
+      doneIds = new Set(SEED_DONE);
+      vp = JSON.parse(JSON.stringify(SEED_VP));
+    }
+  } catch(e) {
+    tasks = JSON.parse(JSON.stringify(SEED_TASKS));
+    doneIds = new Set(SEED_DONE);
+    vp = JSON.parse(JSON.stringify(SEED_VP));
+  }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      tasks: tasks, doneIds: [...doneIds], vp: vp
+    }));
+  } catch(e) {}
+}
+
+function h(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function dueFmt(due) {
+  if (!due) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(due + 'T00:00:00');
+  const diff = Math.round((d - today) / 86400000);
+  if (diff < 0) return { txt: Math.abs(diff) + 'd overdue', cls: 'overdue' };
+  if (diff === 0) return { txt: 'Due today', cls: 'soon' };
+  if (diff <= 3) return { txt: 'Due in ' + diff + 'd', cls: 'soon' };
+  return { txt: d.toLocaleDateString('en-US', {month:'short', day:'numeric'}), cls: '' };
+}
+
+function statusBadge(s) {
+  const m = {'Not Started':'status-ns','In Progress':'status-ip','Waiting':'status-wait','Done':'status-done','Deferred':'status-defer'};
+  return '<span class="status-badge ' + (m[s]||'status-ns') + '">' + h(s) + '</span>';
+}
+
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+function renderStats() {
+  const open = tasks.filter(t => !doneIds.has(t.id));
+  const urgent = open.filter(t => t.priority === 'urgent').length;
+  const high = open.filter(t => t.priority === 'high').length;
+  const done = tasks.filter(t => doneIds.has(t.id)).length;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const overdue = open.filter(t => t.due && new Date(t.due+'T00:00:00') < today).length;
+  document.getElementById('statsRow').innerHTML =
+    '<div class="stat-pill"><b>' + open.length + '</b>Open</div>' +
+    '<div class="stat-pill urgent"><b>' + urgent + '</b>Urgent</div>' +
+    '<div class="stat-pill"><b>' + high + '</b>High</div>' +
+    '<div class="stat-pill"><b>' + overdue + '</b>Overdue</div>' +
+    '<div class="stat-pill"><b>' + done + '</b>Done</div>';
+}
+
+function taskHTML(t) {
+  const isDone = doneIds.has(t.id);
+  const due = dueFmt(t.due);
+  const detail = t.detail && t.detail !== 'Added manually' && t.detail !== 'Added on iPhone'
+    ? '<span class="src-tag" style="color:rgba(249,247,244,0.25);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + h(t.detail.substring(0,80)) + (t.detail.length>80?'...':'') + '</span>'
+    : '';
+  const from = t.from && t.from !== 'You' ? '<span class="src-tag">from: ' + h(t.from) + '</span>' : '';
+  return '<div class="task-item ' + (isDone?'done':'') + '">' +
+    '<div class="task-check ' + (isDone?'checked':'') + '" onclick="toggleDone(\'' + t.id + '\')">' + (isDone?'✓':'') + '</div>' +
+    '<div class="task-body">' +
+      '<div class="task-title">' + h(t.title) + '</div>' +
+      '<div class="task-meta">' +
+        '<span class="pri-badge ' + t.priority + '">' + t.priority + '</span>' +
+        '<span class="src-tag">' + (t.source||'manual') + '</span>' +
+        from +
+        (due ? '<span class="due-tag ' + due.cls + '">' + due.txt + '</span>' : '') +
+        detail +
+      '</div>' +
+    '</div>' +
+    '<button class="edit-btn" onclick="openEdit(\'' + t.id + '\')">Edit</button>' +
+  '</div>';
+}
+
+function renderTasks() {
+  const tl = document.getElementById('taskList');
+  if (!tl) return;
+  let list = tasks.slice();
+  if (curFilter === 'done') list = list.filter(t => doneIds.has(t.id));
+  else {
+    list = list.filter(t => !doneIds.has(t.id));
+    if (curFilter === 'urgent') list = list.filter(t => t.priority === 'urgent');
+    else if (curFilter === 'high') list = list.filter(t => t.priority === 'high');
+  }
+  if (curSort === 'due') {
+    list.sort((a,b) => {
+      if (!a.due && !b.due) return 0;
+      if (!a.due) return 1;
+      if (!b.due) return -1;
+      return new Date(a.due) - new Date(b.due);
+    });
+  } else {
+    list.sort((a,b) => {
+      const o = {urgent:0,high:1,normal:2};
+      return (o[a.priority]||2) - (o[b.priority]||2);
+    });
+  }
+  tl.innerHTML = list.length ? list.map(taskHTML).join('') : '<div class="empty-state">No tasks here</div>';
+  renderStats();
+}
+
+function filterTasks(f, el) {
+  curFilter = f;
+  document.querySelectorAll('#taskFilters .filter-btn').forEach(b => {
+    if (b.onclick && b.onclick.toString().includes("filterTasks")) b.classList.remove('active');
+  });
+  if (el) el.classList.add('active');
+  renderTasks();
+}
+
+function setSort(s, el) {
+  curSort = s;
+  document.getElementById('sortPri').classList.remove('active');
+  document.getElementById('sortDue').classList.remove('active');
+  if (el) el.classList.add('active');
+  renderTasks();
+}
+
+function toggleDone(id) {
+  if (doneIds.has(id)) doneIds.delete(id);
+  else doneIds.add(id);
+  saveData();
+  renderTasks();
+}
+
+function addTask() {
+  const inp = document.getElementById('newTaskInput');
+  const v = inp.value.trim();
+  if (!v) return;
+  tasks.unshift({
+    id: 't' + Date.now(),
+    title: v,
+    detail: 'Added manually',
+    from: 'You',
+    priority: document.getElementById('newTaskPri').value,
+    source: 'manual',
+    due: document.getElementById('newTaskDue').value || null
+  });
+  inp.value = '';
+  document.getElementById('newTaskDue').value = '';
+  saveData();
+  renderTasks();
+}
+
+function openEdit(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  editId = id;
+  document.getElementById('editTitle').value = t.title || '';
+  document.getElementById('editPri').value = t.priority || 'normal';
+  document.getElementById('editDue').value = t.due || '';
+  document.getElementById('editDetail').value = (t.detail && t.detail !== 'Added manually' && t.detail !== 'Added on iPhone') ? t.detail : '';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function saveEdit() {
+  const t = tasks.find(x => x.id === editId);
+  if (!t) return;
+  t.title = document.getElementById('editTitle').value.trim() || t.title;
+  t.priority = document.getElementById('editPri').value;
+  t.due = document.getElementById('editDue').value || null;
+  const d = document.getElementById('editDetail').value.trim();
+  if (d) t.detail = d;
+  saveData();
+  renderTasks();
+  closeModal('editModal');
+}
+
+function deleteEditTask() {
+  if (!editId) return;
+  if (!confirm('Delete this task?')) return;
+  tasks = tasks.filter(x => x.id !== editId);
+  doneIds.delete(editId);
+  saveData();
+  renderTasks();
+  closeModal('editModal');
+}
+
+function renderKanban() {
+  const board = document.getElementById('kanbanBoard');
+  if (!board) return;
+  const cols = ['Q1','Q2','Q3','Q4+','Ideas'];
+  board.innerHTML = cols.map(col => {
+    const items = vp.filter(t => t.section === col);
+    const cards = items.map(t => {
+      const due = dueFmt(t.due);
+      return '<div class="kanban-task" onclick="openVpEdit(\'' + t.id + '\')">' +
+        '<div class="kanban-task-title">' + h(t.name) + '</div>' +
+        '<div class="kanban-task-footer">' + statusBadge(t.status) +
+          (due ? '<span class="due-small ' + due.cls + '">' + due.txt + '</span>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+    return '<div class="kanban-col">' +
+      '<div class="kanban-col-header"><span class="kanban-col-title">' + col + '</span><span class="kanban-count">' + items.length + '</span></div>' +
+      '<div class="kanban-tasks">' + cards + '</div>' +
+      '<button class="add-kanban-btn" onclick="openAddVp(\'' + col + '\')">+ Add task</button>' +
+    '</div>';
+  }).join('');
+
+  const done = vp.filter(t => t.section === 'Completed');
+  document.getElementById('vpSub').textContent = done.length + ' of ' + vp.length + ' tasks complete · ' + (vp.length - done.length) + ' remaining';
+  const dl = document.getElementById('vpDoneList');
+  dl.innerHTML = done.map(t =>
+    '<div class="task-item done" onclick="openVpEdit(\'' + t.id + '\')">' +
+      '<div class="task-check checked">✓</div>' +
+      '<div class="task-body"><div class="task-title">' + h(t.name) + '</div></div>' +
+    '</div>'
+  ).join('') || '<div class="empty-state">No completed items</div>';
+}
+
+function openAddVp(section) {
+  editVpId = null;
+  document.getElementById('vpModalTitle').textContent = 'Add VP Plan Task';
+  document.getElementById('vpName').value = '';
+  document.getElementById('vpSection').value = section || 'Q1';
+  document.getElementById('vpStatus').value = 'Not Started';
+  document.getElementById('vpDue').value = '';
+  document.getElementById('vpNotes').value = '';
+  document.getElementById('vpDeleteBtn').style.display = 'none';
+  document.getElementById('vpModal').classList.add('open');
+}
+
+function openVpEdit(id) {
+  const t = vp.find(x => x.id === id);
+  if (!t) return;
+  editVpId = id;
+  document.getElementById('vpModalTitle').textContent = 'Edit VP Plan Task';
+  document.getElementById('vpName').value = t.name || '';
+  document.getElementById('vpSection').value = t.section || 'Q1';
+  document.getElementById('vpStatus').value = t.status || 'Not Started';
+  document.getElementById('vpDue').value = t.due || '';
+  document.getElementById('vpNotes').value = t.notes || '';
+  document.getElementById('vpDeleteBtn').style.display = 'inline-block';
+  document.getElementById('vpModal').classList.add('open');
+}
+
+function saveVp() {
+  const name = document.getElementById('vpName').value.trim();
+  if (!name) return;
+  const data = {
+    id: editVpId || 'vp' + Date.now(),
+    name: name,
+    section: document.getElementById('vpSection').value,
+    status: document.getElementById('vpStatus').value,
+    due: document.getElementById('vpDue').value || null,
+    notes: document.getElementById('vpNotes').value
+  };
+  if (data.status === 'Done') data.section = 'Completed';
+  if (editVpId) {
+    const i = vp.findIndex(x => x.id === editVpId);
+    if (i >= 0) vp[i] = data;
+  } else {
+    vp.push(data);
+  }
+  saveData();
+  renderKanban();
+  closeModal('vpModal');
+}
+
+function deleteVp() {
+  if (!editVpId) return;
+  if (!confirm('Delete this VP Plan item?')) return;
+  vp = vp.filter(x => x.id !== editVpId);
+  saveData();
+  renderKanban();
+  closeModal('vpModal');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+function exportBackup() {
+  const data = {
+    tasks: tasks,
+    doneIds: [...doneIds],
+    vp: vp,
+    exportDate: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'aviva-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// === Mobile Sync via Supabase ===
+const SUPA_URL = 'https://sxftnwjfqbnsyrccyzrk.supabase.co';
+const SUPA_KEY = 'sb_publishable_eNB2PcRyjgBXc4EjqWFt1g_6d68hhbK';
+const SUPA_ROW = 'aviva-mobile-tasks';
+
+function setMobileStatus(text, color) {
+  const el = document.getElementById('mobileStatus');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = color || 'rgba(249,247,244,0.45)';
+}
+
+async function syncMobile() {
+  if (window.location.protocol === 'file:') {
+    setMobileStatus('Mobile sync only works when hosted on GitHub Pages', '#e8a06a');
+    return;
+  }
+  setMobileStatus('Syncing...', 'rgba(249,247,244,0.6)');
+  try {
+    const res = await fetch(SUPA_URL + '/rest/v1/mobile_tasks?id=eq.' + SUPA_ROW + '&select=data', {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+    });
+    if (!res.ok) throw new Error('Status ' + res.status);
+    const rows = await res.json();
+    if (!rows || !rows.length || !rows[0].data) {
+      setMobileStatus('Mobile: no tasks yet');
+      return;
+    }
+    const remote = rows[0].data;
+    const remoteTasks = remote.tasks || [];
+    const remoteDone = new Set(remote.doneIds || []);
+    let added = 0;
+    remoteTasks.forEach(t => {
+      // Skip if already in our local list, or already marked done locally
+      if (doneIds.has(t.id)) return;
+      if (!tasks.find(x => x.id === t.id)) {
+        tasks.unshift(t);
+        added++;
+      }
+    });
+    // Merge done IDs from mobile (tasks completed on phone become completed here)
+    remoteDone.forEach(id => doneIds.add(id));
+    const now = new Date().toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
+    setMobileStatus('Synced at ' + now + (added ? ' (+' + added + ' new)' : ' (up to date)'), '#5cbf8a');
+    saveData();
+    renderTasks();
+  } catch(e) {
+    console.error('Mobile sync error:', e);
+    setMobileStatus('Sync failed: ' + e.message, '#e87070');
+  }
+}
+
+// === Init - runs after DOM is parsed because script is at end of body ===
+loadData();
+renderTasks();
+renderKanban();
+document.getElementById('syncTime').textContent = 'Loaded ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+
+// Auto-sync mobile on load (after 1s) and every 5 minutes
+setTimeout(syncMobile, 1000);
+setInterval(syncMobile, 5 * 60 * 1000);
+</script>
+</body>
+</html>
